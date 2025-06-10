@@ -1,0 +1,132 @@
+<!--index.wxml-->
+<view class="page">
+  <!-- 顶部横幅 -->
+  <view class="banner">
+    <view class="banner-content">
+      <text class="banner-title">云打印服务</text>
+      <text class="banner-desc">随时随地，轻松打印</text>
+    </view>
+    <view class="banner-icon">🖨️</view>
+  </view>
+
+  <!-- 功能入口 -->
+  <view class="content">
+    <view class="function-grid">
+      <view class="function-item" bindtap="goToUpload">
+        <view class="function-icon">
+          <text class="icon-emoji">📁</text>
+        </view>
+        <text class="function-title">上传文件</text>
+        <text class="function-desc">支持PDF、Word、Excel等</text>
+      </view>
+
+      <view class="function-item" bindtap="goToOrders">
+        <view class="function-icon">
+          <text class="icon-emoji">📋</text>
+        </view>
+        <text class="function-title">我的订单</text>
+        <text class="function-desc">查看打印历史</text>
+      </view>
+
+      <view class="function-item" bindtap="showPriceInfo">
+        <view class="function-icon">
+          <text class="icon-emoji">💰</text>
+        </view>
+        <text class="function-title">价格说明</text>
+        <text class="function-desc">查看打印价格</text>
+      </view>
+
+      <view class="function-item" bindtap="showHelp">
+        <view class="function-icon">
+          <text class="icon-emoji">❓</text>
+        </view>
+        <text class="function-title">使用帮助</text>
+        <text class="function-desc">操作指南</text>
+      </view>
+    </view>
+
+    <!-- 最近订单 -->
+    <view class="recent-orders" wx:if="{{recentOrders.length > 0}}">
+      <view class="section-title">
+        <text>最近订单</text>
+        <text class="more-link" bindtap="goToOrders">查看更多</text>
+      </view>
+      
+      <view class="order-list">
+        <view class="order-item" wx:for="{{recentOrders}}" wx:key="id" bindtap="goToOrderDetail" data-id="{{item.id}}">
+          <view class="order-info">
+            <text class="order-title">{{item.fileName}}</text>
+            <text class="order-desc">{{item.copies}}份 · {{item.isColor ? '彩色' : '黑白'}} · {{item.isDoubleSide ? '双面' : '单面'}}</text>
+            <text class="order-time">{{item.createTime}}</text>
+          </view>
+          <view class="order-status">
+            <text class="status-text status-{{item.statusClass}}">{{item.statusText}}</text>
+            <text class="order-amount">¥{{item.amount}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{recentOrders.length === 0}}">
+      <view class="empty-icon">📄</view>
+      <text class="empty-text">暂无打印记录</text>
+      <button class="btn-primary mt-20" bindtap="goToUpload">立即上传文件</button>
+    </view>
+  </view>
+
+  <!-- 价格说明弹窗 -->
+  <view class="modal" wx:if="{{showPriceModal}}" bindtap="hidePriceModal">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-header">
+        <text class="modal-title">打印价格说明</text>
+        <text class="modal-close" bindtap="hidePriceModal">×</text>
+      </view>
+      <view class="modal-body">
+        <view class="price-item">
+          <text class="price-label">黑白打印</text>
+          <text class="price-value">¥0.1/页</text>
+        </view>
+        <view class="price-item">
+          <text class="price-label">彩色打印</text>
+          <text class="price-value">¥0.5/页</text>
+        </view>
+        <view class="price-item">
+          <text class="price-label">双面打印</text>
+          <text class="price-value">8折优惠</text>
+        </view>
+        <view class="price-note">
+          <text>* 最终价格以实际打印页数计算</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 帮助说明弹窗 -->
+  <view class="modal" wx:if="{{showHelpModal}}" bindtap="hideHelpModal">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-header">
+        <text class="modal-title">使用帮助</text>
+        <text class="modal-close" bindtap="hideHelpModal">×</text>
+      </view>
+      <view class="modal-body">
+        <view class="help-step">
+          <text class="step-number">1</text>
+          <text class="step-text">上传需要打印的文件</text>
+        </view>
+        <view class="help-step">
+          <text class="step-number">2</text>
+          <text class="step-text">选择打印参数（份数、彩色、双面等）</text>
+        </view>
+        <view class="help-step">
+          <text class="step-number">3</text>
+          <text class="step-text">确认订单并完成支付</text>
+        </view>
+        <view class="help-step">
+          <text class="step-number">4</text>
+          <text class="step-text">凭验证码到打印店取件</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>
