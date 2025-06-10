@@ -1,0 +1,128 @@
+# 编译输出
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Java
+target/
+*.log
+*.tmp
+*.temp
+
+# Maven
+.mvn/
+mvnw
+mvnw.cmd
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.project
+.classpath
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# 前端构建输出
+admin/dist/
+admin/.temp/
+admin/.cache/
+
+# 环境变量
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 操作系统
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 微信小程序
+miniprogram/node_modules/
+miniprogram/.tea/
+
+# 日志文件
+logs/
+*.log
+
+# 临时文件
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# 数据库
+*.db
+*.sqlite
+*.sqlite3
+
+# 上传文件
+uploads/
+files/
+
+# 配置文件（包含敏感信息）
+application-prod.yml
+application-dev.yml
+
+# 备份文件
+*.bak
+*.backup
+
+# 压缩文件
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# 包管理器锁文件（可选择性忽略）
+package-lock.json
+yarn.lock
+
+# 测试覆盖率
+coverage/
+*.lcov
+
+# 构建工具
+.gradle/
+build/
+
+# Spring Boot
+spring-boot-*.log
+application-*.log
+
+# H2 数据库文件
+*.h2.db
+*.trace.db
+
+# 证书文件
+*.p12
+*.jks
+*.keystore
+
+# 文档生成
+docs/build/
+site/

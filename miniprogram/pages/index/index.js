@@ -5,7 +5,18 @@ Page({
   data: {
     recentOrders: [],
     showPriceModal: false,
-    showHelpModal: false
+    showHelpModal: false,
+    stats: {
+      totalOrders: 0,
+      totalPages: 0,
+      totalAmount: 0
+    },
+    priceList: [
+      { label: '黑白打印', value: '¥0.1/页', type: 'bw' },
+      { label: '彩色打印', value: '¥0.5/页', type: 'color' },
+      { label: '双面打印', value: '8折优惠', type: 'double' },
+      { label: 'A3纸张', value: '¥0.2/页', type: 'a3' }
+    ]
   },
 
   onLoad() {
@@ -17,6 +28,7 @@ Page({
     console.log('首页显示');
     if (app.globalData.isLogin) {
       this.loadRecentOrders();
+      this.loadUserStats();
     }
   },
 
@@ -28,6 +40,7 @@ Page({
       // 自动登录
       app.wxLogin().then(() => {
         this.loadRecentOrders();
+        this.loadUserStats();
       }).catch(err => {
         console.error('自动登录失败：', err);
         // 登录失败时显示离线模式
@@ -35,6 +48,7 @@ Page({
       });
     } else {
       this.loadRecentOrders();
+      this.loadUserStats();
     }
   },
 
@@ -65,6 +79,28 @@ Page({
   },
 
   /**
+   * 加载用户统计数据
+   */
+  loadUserStats() {
+    app.request({
+      url: '/user/stats',
+      method: 'GET'
+    }).then(res => {
+      if (res.code === 200) {
+        this.setData({
+          stats: {
+            totalOrders: res.data.totalOrders || 0,
+            totalPages: res.data.totalPages || 0,
+            totalAmount: res.data.totalAmount ? res.data.totalAmount.toFixed(2) : '0.00'
+          }
+        });
+      }
+    }).catch(err => {
+      console.error('加载统计数据失败：', err);
+    });
+  },
+
+  /**
    * 显示离线模式
    */
   showOfflineMode() {
@@ -72,7 +108,12 @@ Page({
     // 可以设置一些离线状态的数据
     this.setData({
       recentOrders: [],
-      isOffline: true
+      isOffline: true,
+      stats: {
+        totalOrders: 0,
+        totalPages: 0,
+        totalAmount: '0.00'
+      }
     });
   },
 
@@ -201,6 +242,28 @@ Page({
    */
   onPullDownRefresh() {
     this.loadRecentOrders();
+    this.loadUserStats();
     wx.stopPullDownRefresh();
+  },
+
+  /**
+   * 分享功能
+   */
+  onShareAppMessage() {
+    return {
+      title: '云打印服务 - 随时随地，轻松打印',
+      path: '/pages/index/index',
+      imageUrl: '/images/share-image.png'
+    };
+  },
+
+  /**
+   * 分享到朋友圈
+   */
+  onShareTimeline() {
+    return {
+      title: '云打印服务 - 随时随地，轻松打印',
+      imageUrl: '/images/share-image.png'
+    };
   }
 });

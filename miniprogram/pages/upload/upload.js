@@ -236,10 +236,28 @@ Page({
       'pdf': '📄',
       'document': '📝',
       'spreadsheet': '📊',
+      'presentation': '📋',
       'image': '🖼️',
+      'text': '📄',
       'unknown': '📁'
     };
     return iconMap[fileType] || '📁';
+  },
+
+  /**
+   * 获取文件类型名称
+   */
+  getFileTypeName(fileType) {
+    const nameMap = {
+      'pdf': 'PDF文档',
+      'document': 'Word文档',
+      'spreadsheet': 'Excel表格',
+      'presentation': 'PPT演示',
+      'image': '图片文件',
+      'text': '文本文件',
+      'unknown': '未知类型'
+    };
+    return nameMap[fileType] || '未知类型';
   },
 
   /**

@@ -30,6 +30,25 @@ spring:
       hibernate:
         format_sql: true
 
+# JWT配置
+jwt:
+  secret: printerCloudSecretKey2024
+  expiration: 86400000  # 24小时
+
+# 管理员配置
+admin:
+  default:
+    username: admin
+    password: admin123
+    super-username: superadmin
+    super-password: super123
+
+# 文件上传配置
+file:
+  upload:
+    path: ./uploads/
+    max-size: 50MB
+
 # 日志配置
 logging:
   level:
