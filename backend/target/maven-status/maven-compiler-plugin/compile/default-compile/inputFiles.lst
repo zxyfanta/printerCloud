@@ -3,7 +3,9 @@
 /Users/zoujian/ai_completion/printerCloud/backend/src/main/java/com/printercloud/repository/SystemConfigRepository.java
 /Users/zoujian/ai_completion/printerCloud/backend/src/main/java/com/printercloud/service/SystemConfigService.java
 /Users/zoujian/ai_completion/printerCloud/backend/src/main/java/com/printercloud/service/FileService.java
+/Users/zoujian/ai_completion/printerCloud/backend/src/main/java/com/printercloud/service/WebSocketNotificationService.java
 /Users/zoujian/ai_completion/printerCloud/backend/src/main/java/com/printercloud/repository/PrintFileRepository.java
+/Users/zoujian/ai_completion/printerCloud/backend/src/main/java/com/printercloud/service/OrderStatisticsService.java
 /Users/zoujian/ai_completion/printerCloud/backend/src/main/java/com/printercloud/repository/UserRepository.java
 /Users/zoujian/ai_completion/printerCloud/backend/src/main/java/com/printercloud/entity/PriceConfig.java
 /Users/zoujian/ai_completion/printerCloud/backend/src/main/java/com/printercloud/config/DataInitializer.java
@@ -15,12 +17,14 @@
 /Users/zoujian/ai_completion/printerCloud/backend/src/main/java/com/printercloud/controller/SystemConfigController.java
 /Users/zoujian/ai_completion/printerCloud/backend/src/main/java/com/printercloud/config/WebSocketConfig.java
 /Users/zoujian/ai_completion/printerCloud/backend/src/main/java/com/printercloud/service/PriceConfigService.java
+/Users/zoujian/ai_completion/printerCloud/backend/src/main/java/com/printercloud/dto/OrderStatisticsDTO.java
 /Users/zoujian/ai_completion/printerCloud/backend/src/main/java/com/printercloud/repository/PrintOrderRepository.java
 /Users/zoujian/ai_completion/printerCloud/backend/src/main/java/com/printercloud/controller/PrintOrderController.java
 /Users/zoujian/ai_completion/printerCloud/backend/src/main/java/com/printercloud/dto/OrderQueryRequest.java
 /Users/zoujian/ai_completion/printerCloud/backend/src/main/java/com/printercloud/entity/PrintOrder.java
 /Users/zoujian/ai_completion/printerCloud/backend/src/main/java/com/printercloud/repository/PriceConfigRepository.java
 /Users/zoujian/ai_completion/printerCloud/backend/src/main/java/com/printercloud/PrinterCloudApplication.java
+/Users/zoujian/ai_completion/printerCloud/backend/src/main/java/com/printercloud/controller/StatisticsController.java
 /Users/zoujian/ai_completion/printerCloud/backend/src/main/java/com/printercloud/service/NotificationService.java
 /Users/zoujian/ai_completion/printerCloud/backend/src/main/java/com/printercloud/service/PrintOrderService.java
 /Users/zoujian/ai_completion/printerCloud/backend/src/main/java/com/printercloud/dto/LoginResponse.java

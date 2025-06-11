@@ -51,11 +51,65 @@
               <el-icon size="40"><Money /></el-icon>
             </div>
             <div class="stat-info">
-              <div class="stat-number">¥{{ stats.totalRevenue }}</div>
+              <div class="stat-number">¥{{ stats.totalRevenue.toFixed(2) }}</div>
               <div class="stat-label">总收入</div>
             </div>
           </div>
         </el-card>
+      </el-col>
+    </el-row>
+
+    <!-- 今日统计 -->
+    <el-row :gutter="20" style="margin-top: 20px;">
+      <el-col :span="6">
+        <el-card class="today-stat-card">
+          <div class="today-stat-content">
+            <div class="today-stat-icon">
+              <el-icon size="24"><Calendar /></el-icon>
+            </div>
+            <div class="today-stat-info">
+              <div class="today-stat-number">{{ stats.todayOrders }}</div>
+              <div class="today-stat-label">今日订单</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+
+      <el-col :span="6">
+        <el-card class="today-stat-card">
+          <div class="today-stat-content">
+            <div class="today-stat-icon">
+              <el-icon size="24"><Money /></el-icon>
+            </div>
+            <div class="today-stat-info">
+              <div class="today-stat-number">¥{{ stats.todayRevenue.toFixed(2) }}</div>
+              <div class="today-stat-label">今日收入</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+
+      <el-col :span="12">
+        <el-card class="status-overview-card">
+          <template #header>
+            <span>订单状态分布</span>
+          </template>
+          <div class="status-overview">
+            <div v-for="(count, status) in stats.statusCounts" :key="status" class="status-item">
+              <el-tag :type="getOrderStatusType(parseInt(status))" size="small">
+                {{ getOrderStatusText(parseInt(status)) }}
+              </el-tag>
+              <span class="status-count">{{ count }}</span>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <!-- 订单趋势图 -->
+    <el-row style="margin-top: 20px;">
+      <el-col :span="24">
+        <OrderChart ref="orderChartRef" />
       </el-col>
     </el-row>
 
@@ -131,6 +185,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import api from '@/utils/api'
+import OrderChart from '@/components/OrderChart.vue'
 
 const loading = reactive({
   files: false,
@@ -141,11 +196,15 @@ const stats = reactive({
   totalFiles: 0,
   totalOrders: 0,
   totalUsers: 0,
-  totalRevenue: 0
+  totalRevenue: 0,
+  todayOrders: 0,
+  todayRevenue: 0,
+  statusCounts: {}
 })
 
 const recentFiles = ref([])
 const recentOrders = ref([])
+const orderChartRef = ref()
 
 onMounted(() => {
   loadDashboardData()
@@ -190,9 +249,28 @@ const loadRecentOrders = async () => {
 }
 
 const loadStats = async () => {
-  // 这里可以添加更多统计数据的API调用
-  stats.totalUsers = 100 // 示例数据
-  stats.totalRevenue = 5000 // 示例数据
+  try {
+    // 加载概览统计数据
+    const response = await api.get('/statistics/overview')
+    if (response.data.code === 200) {
+      const overview = response.data.data
+      stats.totalRevenue = overview.totalRevenue || 0
+      stats.todayOrders = overview.todayOrders || 0
+      stats.todayRevenue = overview.todayRevenue || 0
+      stats.statusCounts = overview.statusCounts || {}
+    }
+
+    // 加载用户统计（如果有相关API）
+    stats.totalUsers = 100 // 示例数据，可以替换为实际API调用
+  } catch (error) {
+    console.error('加载统计数据失败:', error)
+    // 设置默认值
+    stats.totalRevenue = 0
+    stats.todayOrders = 0
+    stats.todayRevenue = 0
+    stats.statusCounts = {}
+    stats.totalUsers = 0
+  }
 }
 
 const downloadFile = async (file) => {
@@ -357,5 +435,66 @@ const getOrderStatusText = (status) => {
   text-align: center;
   color: #909399;
   padding: 20px 0;
+}
+
+.today-stat-card {
+  height: 80px;
+}
+
+.today-stat-content {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.today-stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #f0f9ff;
+  color: #409EFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+}
+
+.today-stat-info {
+  flex: 1;
+}
+
+.today-stat-number {
+  font-size: 18px;
+  font-weight: bold;
+  color: #303133;
+}
+
+.today-stat-label {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 2px;
+}
+
+.status-overview-card {
+  height: 80px;
+}
+
+.status-overview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.status-count {
+  font-size: 14px;
+  font-weight: 500;
+  color: #303133;
 }
 </style>

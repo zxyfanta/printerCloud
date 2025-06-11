@@ -12,8 +12,8 @@
       </template>
 
       <el-tabs v-model="activeTab" type="border-card">
-        <!-- 轮询设置 -->
-        <el-tab-pane label="轮询设置" name="polling">
+        <!-- 实时更新设置 -->
+        <el-tab-pane label="实时更新" name="polling">
           <el-form
             ref="pollingFormRef"
             :model="pollingSettings"
@@ -21,24 +21,38 @@
             label-width="120px"
             style="max-width: 600px"
           >
-            <el-form-item label="启用轮询" prop="enabled">
+            <el-form-item label="更新方式" prop="updateMode">
+              <el-radio-group v-model="pollingSettings.updateMode" @change="handleUpdateModeChange">
+                <el-radio label="polling">轮询刷新</el-radio>
+                <el-radio label="websocket" disabled>WebSocket实时推送（开发中）</el-radio>
+              </el-radio-group>
+              <div class="form-tip">
+                当前使用轮询模式定期刷新数据，WebSocket功能正在开发中
+              </div>
+            </el-form-item>
+
+            <el-form-item label="启用更新" prop="enabled">
               <el-switch
                 v-model="pollingSettings.enabled"
                 active-text="启用"
                 inactive-text="禁用"
               />
               <div class="form-tip">
-                启用后系统将定期自动刷新订单列表，获取最新数据
+                启用后系统将自动获取最新数据
               </div>
             </el-form-item>
 
-            <el-form-item label="轮询间隔" prop="interval">
+            <el-form-item
+              label="轮询间隔"
+              prop="interval"
+              v-show="pollingSettings.updateMode === 'polling'"
+            >
               <el-input-number
                 v-model="pollingSettings.interval"
                 :min="1000"
                 :max="60000"
                 :step="1000"
-                :disabled="!pollingSettings.enabled"
+                :disabled="!pollingSettings.enabled || pollingSettings.updateMode !== 'polling'"
                 style="width: 200px"
               />
               <span style="margin-left: 10px">毫秒</span>
@@ -47,11 +61,14 @@
               </div>
             </el-form-item>
 
-            <el-form-item label="预设选项">
-              <el-radio-group 
-                v-model="pollingPreset" 
+            <el-form-item
+              label="预设选项"
+              v-show="pollingSettings.updateMode === 'polling'"
+            >
+              <el-radio-group
+                v-model="pollingPreset"
                 @change="applyPreset"
-                :disabled="!pollingSettings.enabled"
+                :disabled="!pollingSettings.enabled || pollingSettings.updateMode !== 'polling'"
               >
                 <el-radio :label="3000">3秒（快速）</el-radio>
                 <el-radio :label="5000">5秒（推荐）</el-radio>
@@ -156,6 +173,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import api from '@/utils/api'
+import webSocketService from '@/utils/websocket'
 
 const activeTab = ref('polling')
 const saving = ref(false)
@@ -163,10 +181,11 @@ const pollingFormRef = ref()
 const notificationFormRef = ref()
 const displayFormRef = ref()
 
-// 轮询设置
+// 实时更新设置
 const pollingSettings = reactive({
   enabled: true,
-  interval: 5000
+  interval: 5000,
+  updateMode: 'websocket' // websocket | polling
 })
 
 const pollingPreset = ref(5000)
@@ -274,6 +293,14 @@ const loadSettings = async () => {
 
 const applyPreset = (value) => {
   pollingSettings.interval = value
+}
+
+const handleUpdateModeChange = () => {
+  if (pollingSettings.updateMode === 'websocket') {
+    webSocketService.setEnabled(pollingSettings.enabled)
+  } else {
+    webSocketService.setEnabled(false)
+  }
 }
 
 const saveSettings = async () => {

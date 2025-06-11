@@ -34,6 +34,9 @@ public class PrintOrderService {
     @Autowired
     private NotificationService notificationService;
 
+    @Autowired
+    private WebSocketNotificationService webSocketNotificationService;
+
     /**
      * 创建订单
      */
@@ -65,6 +68,9 @@ public class PrintOrderService {
 
         // 发送新订单通知
         notificationService.sendNewOrderNotification(savedOrder);
+
+        // 发送WebSocket通知
+        webSocketNotificationService.sendNewOrderNotification(savedOrder);
 
         return savedOrder;
     }
@@ -171,16 +177,22 @@ public class PrintOrderService {
         Optional<PrintOrder> optionalOrder = orderRepository.findById(orderId);
         if (optionalOrder.isPresent()) {
             PrintOrder order = optionalOrder.get();
+            Integer oldStatus = order.getStatus();
             order.setStatus(status);
-            
+
             // 设置相应的时间
             if (status == 1) { // 已支付
                 order.setPayTime(LocalDateTime.now());
             } else if (status == 3) { // 已完成
                 order.setFinishTime(LocalDateTime.now());
             }
-            
-            orderRepository.save(order);
+
+            PrintOrder updatedOrder = orderRepository.save(order);
+
+            // 发送WebSocket状态更新通知
+            String action = getStatusAction(status);
+            webSocketNotificationService.sendOrderUpdateNotification(updatedOrder, action);
+
             return true;
         }
         return false;
@@ -196,7 +208,11 @@ public class PrintOrderService {
             if (order.getStatus() == 1 || order.getStatus() == 2) { // 已支付或打印中
                 order.setStatus(3); // 已完成
                 order.setFinishTime(LocalDateTime.now());
-                orderRepository.save(order);
+                PrintOrder updatedOrder = orderRepository.save(order);
+
+                // 发送WebSocket通知
+                webSocketNotificationService.sendOrderUpdateNotification(updatedOrder, "COMPLETED");
+
                 return true;
             }
         }
@@ -300,7 +316,11 @@ public class PrintOrderService {
             if (order.getStatus() == 0) {
                 order.setStatus(4); // 已取消
                 order.setUpdateTime(LocalDateTime.now());
-                orderRepository.save(order);
+                PrintOrder updatedOrder = orderRepository.save(order);
+
+                // 发送WebSocket通知
+                webSocketNotificationService.sendOrderUpdateNotification(updatedOrder, "CANCELLED");
+
                 return true;
             }
         }
@@ -362,5 +382,19 @@ public class PrintOrderService {
             code = String.format("%06d", new Random().nextInt(1000000));
         } while (orderRepository.findByVerifyCode(code).isPresent());
         return code;
+    }
+
+    /**
+     * 获取状态对应的操作名称
+     */
+    private String getStatusAction(Integer status) {
+        switch (status) {
+            case 1: return "PAID";
+            case 2: return "PRINTING";
+            case 3: return "COMPLETED";
+            case 4: return "CANCELLED";
+            case 5: return "REFUNDED";
+            default: return "UPDATED";
+        }
     }
 }

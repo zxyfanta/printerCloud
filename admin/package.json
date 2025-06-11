@@ -12,10 +12,12 @@
     "@element-plus/icons-vue": "^2.1.0",
     "@stomp/stompjs": "^7.1.1",
     "axios": "^1.5.0",
+    "echarts": "^5.6.0",
     "element-plus": "^2.3.9",
     "pinia": "^2.1.6",
     "sockjs-client": "^1.6.1",
     "vue": "^3.3.4",
+    "vue-echarts": "^7.0.3",
     "vue-router": "^4.2.4"
   },
   "devDependencies": {

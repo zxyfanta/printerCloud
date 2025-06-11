@@ -30,8 +30,52 @@ const routes = [
       {
         path: '/orders',
         name: 'Orders',
-        component: () => import('@/views/Orders.vue'),
-        meta: { title: '订单管理', icon: 'List' }
+        redirect: '/orders/all',
+        meta: { title: '订单管理', icon: 'List' },
+        children: [
+          {
+            path: 'all',
+            name: 'OrdersAll',
+            component: () => import('@/views/orders/OrdersAll.vue'),
+            meta: { title: '全部订单', icon: 'List' }
+          },
+          {
+            path: 'pending',
+            name: 'OrdersPending',
+            component: () => import('@/views/orders/OrdersPending.vue'),
+            meta: { title: '待支付', icon: 'Clock' }
+          },
+          {
+            path: 'paid',
+            name: 'OrdersPaid',
+            component: () => import('@/views/orders/OrdersPaid.vue'),
+            meta: { title: '已支付', icon: 'Money' }
+          },
+          {
+            path: 'printing',
+            name: 'OrdersPrinting',
+            component: () => import('@/views/orders/OrdersPrinting.vue'),
+            meta: { title: '打印中', icon: 'Printer' }
+          },
+          {
+            path: 'completed',
+            name: 'OrdersCompleted',
+            component: () => import('@/views/orders/OrdersCompleted.vue'),
+            meta: { title: '已完成', icon: 'Check' }
+          },
+          {
+            path: 'cancelled',
+            name: 'OrdersCancelled',
+            component: () => import('@/views/orders/OrdersCancelled.vue'),
+            meta: { title: '已取消', icon: 'Close' }
+          },
+          {
+            path: 'refunded',
+            name: 'OrdersRefunded',
+            component: () => import('@/views/orders/OrdersRefunded.vue'),
+            meta: { title: '已退款', icon: 'RefreshLeft' }
+          }
+        ]
       },
       {
         path: '/users',

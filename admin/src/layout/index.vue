@@ -20,10 +20,40 @@
           <el-icon><Document /></el-icon>
           <span>文件管理</span>
         </el-menu-item>
-        <el-menu-item index="/orders">
-          <el-icon><List /></el-icon>
-          <span>订单管理</span>
-        </el-menu-item>
+        <el-sub-menu index="/orders">
+          <template #title>
+            <el-icon><List /></el-icon>
+            <span>订单管理</span>
+          </template>
+          <el-menu-item index="/orders/all">
+            <el-icon><List /></el-icon>
+            <span>全部订单</span>
+          </el-menu-item>
+          <el-menu-item index="/orders/pending">
+            <el-icon><Clock /></el-icon>
+            <span>待支付</span>
+          </el-menu-item>
+          <el-menu-item index="/orders/paid">
+            <el-icon><Money /></el-icon>
+            <span>已支付</span>
+          </el-menu-item>
+          <el-menu-item index="/orders/printing">
+            <el-icon><Printer /></el-icon>
+            <span>打印中</span>
+          </el-menu-item>
+          <el-menu-item index="/orders/completed">
+            <el-icon><Check /></el-icon>
+            <span>已完成</span>
+          </el-menu-item>
+          <el-menu-item index="/orders/cancelled">
+            <el-icon><Close /></el-icon>
+            <span>已取消</span>
+          </el-menu-item>
+          <el-menu-item index="/orders/refunded">
+            <el-icon><RefreshLeft /></el-icon>
+            <span>已退款</span>
+          </el-menu-item>
+        </el-sub-menu>
         <el-menu-item index="/users">
           <el-icon><User /></el-icon>
           <span>用户管理</span>

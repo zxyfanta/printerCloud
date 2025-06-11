@@ -86,4 +86,42 @@ public interface PrintOrderRepository extends JpaRepository<PrintOrder, Long> {
      * 根据验证码模糊查询
      */
     List<PrintOrder> findByVerifyCodeContaining(String verifyCode);
+
+    // 统计查询方法
+
+    /**
+     * 统计时间范围内的订单数量
+     */
+    Long countByCreateTimeBetween(LocalDateTime startTime, LocalDateTime endTime);
+
+    /**
+     * 统计特定状态在时间范围内的订单数量
+     */
+    Long countByStatusAndCreateTimeBetween(Integer status, LocalDateTime startTime, LocalDateTime endTime);
+
+    /**
+     * 统计特定状态的订单数量
+     */
+    Long countByStatus(Integer status);
+
+    /**
+     * 计算时间范围内的订单总金额
+     */
+    @Query("SELECT SUM(o.amount) FROM PrintOrder o WHERE o.createTime BETWEEN :startTime AND :endTime")
+    Double sumAmountByCreateTimeBetween(@Param("startTime") LocalDateTime startTime,
+                                       @Param("endTime") LocalDateTime endTime);
+
+    /**
+     * 计算特定状态在时间范围内的订单总金额
+     */
+    @Query("SELECT SUM(o.amount) FROM PrintOrder o WHERE o.status = :status AND o.createTime BETWEEN :startTime AND :endTime")
+    Double sumAmountByStatusAndCreateTimeBetween(@Param("status") Integer status,
+                                               @Param("startTime") LocalDateTime startTime,
+                                               @Param("endTime") LocalDateTime endTime);
+
+    /**
+     * 计算特定状态的订单总金额
+     */
+    @Query("SELECT SUM(o.amount) FROM PrintOrder o WHERE o.status = :status")
+    Double sumAmountByStatus(@Param("status") Integer status);
 }
