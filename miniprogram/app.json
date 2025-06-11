@@ -3,7 +3,10 @@
     "pages/index/index",
     "pages/upload/upload",
     "pages/preview/preview",
+    "pages/preview-web/preview-web",
     "pages/config/config",
+    "pages/confirm/confirm",
+    "pages/upload-server/upload-server",
     "pages/payment/payment",
     "pages/orders/orders",
     "pages/order-detail/order-detail",
@@ -11,24 +14,24 @@
   ],
   "window": {
     "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#1890ff",
-    "navigationBarTitleText": "云打印",
+    "navigationBarBackgroundColor": "#1e3c72",
+    "navigationBarTitleText": "专业云打印",
     "navigationBarTextStyle": "white",
-    "backgroundColor": "#f5f5f5"
+    "backgroundColor": "#f8f9fa"
   },
   "tabBar": {
-    "color": "#666666",
-    "selectedColor": "#1890ff",
+    "color": "#999999",
+    "selectedColor": "#1e3c72",
     "backgroundColor": "#ffffff",
-    "borderStyle": "black",
+    "borderStyle": "white",
     "list": [
-      {
-        "pagePath": "pages/index/index",
-        "text": "首页"
-      },
       {
         "pagePath": "pages/orders/orders",
         "text": "订单"
+      },
+      {
+        "pagePath": "pages/index/index",
+        "text": "打印"
       },
       {
         "pagePath": "pages/profile/profile",

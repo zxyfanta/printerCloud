@@ -53,8 +53,8 @@
           </el-col>
           <el-col :span="4">
             <el-radio-group v-model="viewMode" @change="handleViewModeChange">
-              <el-radio-button label="card">卡片</el-radio-button>
-              <el-radio-button label="table">表格</el-radio-button>
+              <el-radio-button value="card">卡片</el-radio-button>
+              <el-radio-button value="table">表格</el-radio-button>
             </el-radio-group>
           </el-col>
         </el-row>
@@ -240,6 +240,7 @@ import { ref, reactive, onMounted, onUnmounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import api from '@/utils/api'
 import webSocketService from '@/utils/websocket'
+import { generateMockOrders, getStatusText, getStatusType, shouldUseMockData, mockApiDelay } from '@/utils/mockData'
 
 // Props
 const props = defineProps({
@@ -329,6 +330,27 @@ onUnmounted(() => {
 const loadOrderList = async () => {
   try {
     loading.value = true
+
+    // 检查是否使用模拟数据
+    if (shouldUseMockData()) {
+      console.log('使用模拟数据模式')
+      await mockApiDelay(300) // 模拟网络延迟
+
+      const mockResponse = generateMockOrders(
+        pagination.page,
+        pagination.size,
+        effectiveStatusFilter.value,
+        searchQuery.value
+      )
+
+      orderList.value = mockResponse.data.content
+      pagination.total = mockResponse.data.totalElements
+
+      ElMessage.success('已加载模拟数据（后端服务不可用）')
+      return
+    }
+
+    // 尝试调用真实API
     const params = {
       page: pagination.page,
       size: pagination.size,
@@ -346,7 +368,23 @@ const loadOrderList = async () => {
     }
   } catch (error) {
     console.error('获取订单列表失败:', error)
-    ElMessage.error('获取订单列表失败')
+
+    // API调用失败时，自动启用模拟数据
+    console.log('API调用失败，自动启用模拟数据模式')
+    localStorage.setItem('useMockData', 'true')
+
+    await mockApiDelay(300)
+    const mockResponse = generateMockOrders(
+      pagination.page,
+      pagination.size,
+      effectiveStatusFilter.value,
+      searchQuery.value
+    )
+
+    orderList.value = mockResponse.data.content
+    pagination.total = mockResponse.data.totalElements
+
+    ElMessage.warning('后端服务不可用，已切换到模拟数据模式')
   } finally {
     loading.value = false
   }
@@ -380,30 +418,7 @@ const handleCurrentChange = (page) => {
   loadOrderList()
 }
 
-// 状态相关方法
-const getStatusText = (status) => {
-  const texts = {
-    0: '待支付',
-    1: '已支付',
-    2: '打印中',
-    3: '已完成',
-    4: '已取消',
-    5: '已退款'
-  }
-  return texts[status] || '未知'
-}
-
-const getStatusType = (status) => {
-  const types = {
-    0: 'warning',
-    1: 'success',
-    2: 'primary',
-    3: 'success',
-    4: 'danger',
-    5: 'info'
-  }
-  return types[status] || 'info'
-}
+// 状态相关方法已从mockData导入
 
 // 时间格式化
 const formatTime = (time) => {

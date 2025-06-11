@@ -1,0 +1,36 @@
+<!--pages/preview-web/preview-web.wxml-->
+<view class="page">
+  <!-- 加载状态 -->
+  <view class="loading-container" wx:if="{{!webviewReady}}">
+    <view class="loading-content">
+      <text class="loading-icon">📄</text>
+      <text class="loading-text">正在加载PDF预览...</text>
+      <text class="loading-tip">首次加载可能需要较长时间</text>
+    </view>
+  </view>
+
+  <!-- Web-view容器 -->
+  <web-view 
+    wx:if="{{pdfUrl}}"
+    src="{{webviewUrl}}" 
+    bindload="onWebviewLoad"
+    binderror="onWebviewError">
+  </web-view>
+
+  <!-- 错误状态 -->
+  <view class="error-container" wx:if="{{hasError}}">
+    <view class="error-content">
+      <text class="error-icon">❌</text>
+      <text class="error-title">预览失败</text>
+      <text class="error-message">{{errorMessage}}</text>
+      
+      <button class="btn primary" bindtap="retry">
+        <text class="btn-text">重试</text>
+      </button>
+      
+      <button class="btn secondary" bindtap="useNativePreview">
+        <text class="btn-text">使用系统预览</text>
+      </button>
+    </view>
+  </view>
+</view>

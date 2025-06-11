@@ -89,7 +89,7 @@
                   bindtap="selectSide" data-side="true">
               <view class="option-icon">📋</view>
               <text class="option-text">双面</text>
-              <text class="option-discount">{{Math.round(priceConfig.doubleSideDiscount * 100)}}折</text>
+              <text class="option-discount">{{priceConfig.doubleSideDiscountText}}</text>
             </view>
           </view>
         </view>
@@ -136,7 +136,7 @@
       </view>
       <view class="price-item" wx:if="{{printConfig.isDoubleSide}}">
         <text class="price-label">双面折扣</text>
-        <text class="price-value discount">-{{Math.round((1 - priceConfig.doubleSideDiscount) * 100)}}%</text>
+        <text class="price-value discount">{{priceConfig.doubleSideDiscountPercentText}}</text>
       </view>
       <view class="price-total">
         <text class="total-label">总计</text>

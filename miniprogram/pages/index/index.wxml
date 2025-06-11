@@ -5,12 +5,12 @@
     <view class="banner-bg"></view>
     <view class="banner-content">
       <view class="banner-text">
-        <text class="banner-title">云打印服务</text>
-        <text class="banner-desc">随时随地，轻松打印</text>
-        <text class="banner-subtitle">支持多种文件格式，快速便捷</text>
+        <text class="banner-title">专业云打印</text>
+        <text class="banner-desc">高效便捷 · 品质保证</text>
+        <text class="banner-subtitle">企业级打印服务，支持多种文件格式</text>
       </view>
       <view class="banner-icon">
-        <image src="/images/printer-icon.png" class="printer-image" mode="aspectFit"></image>
+        <view class="printer-icon-large">🖨️</view>
       </view>
     </view>
   </view>
@@ -18,79 +18,63 @@
   <!-- 快速操作 -->
   <view class="quick-action">
     <button class="quick-btn primary" bindtap="goToUpload">
-      <view class="quick-btn-icon">📁</view>
-      <text class="quick-btn-text">立即打印</text>
+      <view class="quick-btn-icon">🖨️</view>
+      <text class="quick-btn-text">开始打印</text>
+      <text class="quick-btn-desc">上传文件，一键打印</text>
     </button>
   </view>
 
-  <!-- 功能入口 -->
+  <!-- 核心服务 -->
   <view class="content">
     <view class="section-header">
-      <text class="section-title">服务功能</text>
+      <text class="section-title">核心服务</text>
+      <text class="section-subtitle">专业打印解决方案</text>
     </view>
 
-    <view class="function-grid">
-      <view class="function-item upload" bindtap="goToUpload">
-        <view class="function-icon-wrapper">
-          <view class="function-icon">
-            <text class="icon-emoji">📄</text>
+    <view class="service-grid">
+      <view class="service-item primary" bindtap="goToUpload">
+        <view class="service-icon-wrapper">
+          <view class="service-icon primary">
+            <text class="icon-emoji">🖨️</text>
           </view>
         </view>
-        <text class="function-title">文件上传</text>
-        <text class="function-desc">PDF、Word、Excel等</text>
+        <text class="service-title">文档打印</text>
+        <text class="service-desc">PDF、Word、Excel、PPT</text>
+        <view class="service-badge">热门</view>
       </view>
 
-      <view class="function-item orders" bindtap="goToOrders">
-        <view class="function-icon-wrapper">
-          <view class="function-icon">
-            <text class="icon-emoji">📋</text>
+      <view class="service-item" bindtap="goToSecondHand">
+        <view class="service-icon-wrapper">
+          <view class="service-icon">
+            <text class="icon-emoji">♻️</text>
           </view>
         </view>
-        <text class="function-title">我的订单</text>
-        <text class="function-desc">查看打印历史</text>
+        <text class="service-title">二手商品</text>
+        <text class="service-desc">环保回收，价值重现</text>
       </view>
 
-      <view class="function-item price" bindtap="showPriceInfo">
-        <view class="function-icon-wrapper">
-          <view class="function-icon">
-            <text class="icon-emoji">💰</text>
+      <view class="service-item" bindtap="goToDiscount">
+        <view class="service-icon-wrapper">
+          <view class="service-icon">
+            <text class="icon-emoji">🎁</text>
           </view>
         </view>
-        <text class="function-title">价格说明</text>
-        <text class="function-desc">透明合理定价</text>
+        <text class="service-title">优惠购</text>
+        <text class="service-desc">限时特价，超值优惠</text>
       </view>
 
-      <view class="function-item help" bindtap="showHelp">
-        <view class="function-icon-wrapper">
-          <view class="function-icon">
-            <text class="icon-emoji">❓</text>
+      <view class="service-item" bindtap="goToElectronics">
+        <view class="service-icon-wrapper">
+          <view class="service-icon">
+            <text class="icon-emoji">📱</text>
           </view>
         </view>
-        <text class="function-title">使用帮助</text>
-        <text class="function-desc">操作指南说明</text>
+        <text class="service-title">电子产品</text>
+        <text class="service-desc">数码设备，品质保证</text>
       </view>
     </view>
 
-    <!-- 统计信息 -->
-    <view class="stats-section">
-      <view class="section-header">
-        <text class="section-title">服务统计</text>
-      </view>
-      <view class="stats-grid">
-        <view class="stat-item">
-          <text class="stat-number">{{stats.totalOrders || 0}}</text>
-          <text class="stat-label">总订单数</text>
-        </view>
-        <view class="stat-item">
-          <text class="stat-number">{{stats.totalPages || 0}}</text>
-          <text class="stat-label">打印页数</text>
-        </view>
-        <view class="stat-item">
-          <text class="stat-number">{{stats.totalAmount || 0}}</text>
-          <text class="stat-label">累计消费</text>
-        </view>
-      </view>
-    </view>
+
 
     <!-- 最近订单 -->
     <view class="recent-orders" wx:if="{{recentOrders.length > 0}}">

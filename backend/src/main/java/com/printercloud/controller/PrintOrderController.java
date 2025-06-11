@@ -318,15 +318,15 @@ public class PrintOrderController {
     }
 
     /**
-     * 更新订单状态
+     * 更新订单状态（字符串参数版本）
      */
     @PostMapping("/{id}/status")
-    public ResponseEntity<Map<String, Object>> updateOrderStatus(
+    public ResponseEntity<Map<String, Object>> updateOrderStatusByString(
             @PathVariable Long id,
             @RequestBody Map<String, String> request) {
         try {
             String status = request.get("status");
-            boolean success = orderService.updateOrderStatus(id, status);
+            boolean success = orderService.updateOrderStatusByString(id, status);
 
             Map<String, Object> response = new HashMap<>();
             if (success) {

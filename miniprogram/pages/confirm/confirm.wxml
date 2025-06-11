@@ -1,0 +1,124 @@
+<!--confirm.wxml-->
+<view class="page">
+  <!-- 页面标题 -->
+  <view class="page-header">
+    <text class="page-title">订单确认</text>
+    <text class="page-subtitle">请确认打印信息和费用</text>
+  </view>
+
+  <view class="content">
+    <!-- 文件信息 -->
+    <view class="section-card">
+      <view class="section-header">
+        <text class="section-title">文件信息</text>
+      </view>
+      <view class="file-info">
+        <view class="file-icon">
+          <text>{{fileInfo.icon}}</text>
+        </view>
+        <view class="file-details">
+          <text class="file-name">{{fileInfo.name}}</text>
+          <text class="file-desc">{{fileInfo.size}} · 预计{{fileInfo.pageCount}}页</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 打印配置 -->
+    <view class="section-card">
+      <view class="section-header">
+        <text class="section-title">打印配置</text>
+        <button class="edit-btn" bindtap="editConfig">
+          <text class="edit-text">修改</text>
+        </button>
+      </view>
+      
+      <view class="config-list">
+        <view class="config-item">
+          <text class="config-label">打印份数</text>
+          <text class="config-value">{{printConfig.copies}}份</text>
+        </view>
+        
+        <view class="config-item">
+          <text class="config-label">页数范围</text>
+          <text class="config-value">{{printConfig.pageRangeText}}</text>
+        </view>
+
+        <view class="config-item">
+          <text class="config-label">颜色</text>
+          <text class="config-value">{{printConfig.colorText}}</text>
+        </view>
+
+        <view class="config-item">
+          <text class="config-label">单双面</text>
+          <text class="config-value">{{printConfig.sideText}}</text>
+        </view>
+        
+        <view class="config-item">
+          <text class="config-label">纸张规格</text>
+          <text class="config-value">{{printConfig.paperSize}}</text>
+        </view>
+        
+        <view class="config-item" wx:if="{{printConfig.remark}}">
+          <text class="config-label">备注</text>
+          <text class="config-value">{{printConfig.remark}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 费用明细 -->
+    <view class="section-card">
+      <view class="section-header">
+        <text class="section-title">费用明细</text>
+      </view>
+      
+      <view class="price-list">
+        <view class="price-item">
+          <text class="price-label">打印页数</text>
+          <text class="price-value">{{calculatedPages}}页</text>
+        </view>
+        
+        <view class="price-item">
+          <text class="price-label">打印份数</text>
+          <text class="price-value">{{printConfig.copies}}份</text>
+        </view>
+        
+        <view class="price-item">
+          <text class="price-label">单价</text>
+          <text class="price-value">¥{{unitPrice}}/页</text>
+        </view>
+        
+        <view class="price-item" wx:if="{{printConfig.isDoubleSide}}">
+          <text class="price-label">双面折扣</text>
+          <text class="price-value discount">-20%</text>
+        </view>
+      </view>
+      
+      <view class="price-total">
+        <text class="total-label">总计</text>
+        <text class="total-amount">¥{{totalAmount}}</text>
+      </view>
+    </view>
+
+    <!-- 支付说明 -->
+    <view class="payment-tips">
+      <view class="tip-item">
+        <text class="tip-icon">💡</text>
+        <text class="tip-text">支付成功后，文件将自动上传到服务器进行打印</text>
+      </view>
+      <view class="tip-item">
+        <text class="tip-icon">🔒</text>
+        <text class="tip-text">我们承诺保护您的文件安全，打印完成后自动删除</text>
+      </view>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="action-buttons">
+      <button class="btn secondary" bindtap="editConfig">
+        <text class="btn-text">修改配置</text>
+      </button>
+      <button class="btn primary" bindtap="confirmAndPay" disabled="{{loading}}">
+        <text class="btn-text">{{loading ? '处理中...' : '确认支付'}}</text>
+      </button>
+    </view>
+  </view>
+</view>

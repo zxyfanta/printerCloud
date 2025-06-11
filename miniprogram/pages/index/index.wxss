@@ -6,10 +6,11 @@ page {
 /* 横幅样式 */
 .banner {
   position: relative;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 60rpx 30rpx 40rpx;
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  padding: 80rpx 30rpx 50rpx;
   color: white;
   overflow: hidden;
+  box-shadow: 0 8rpx 32rpx rgba(30, 60, 114, 0.3);
 }
 
 .banner-bg {
@@ -34,36 +35,42 @@ page {
 }
 
 .banner-title {
-  font-size: 48rpx;
-  font-weight: bold;
+  font-size: 52rpx;
+  font-weight: 700;
   display: block;
-  margin-bottom: 12rpx;
-  letter-spacing: 1rpx;
+  margin-bottom: 20rpx;
+  text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.3);
+  letter-spacing: 2rpx;
 }
 
 .banner-desc {
-  font-size: 32rpx;
-  opacity: 0.9;
+  font-size: 34rpx;
   display: block;
-  margin-bottom: 8rpx;
+  margin-bottom: 16rpx;
+  opacity: 0.95;
+  font-weight: 500;
 }
 
 .banner-subtitle {
-  font-size: 26rpx;
-  opacity: 0.7;
+  font-size: 28rpx;
+  opacity: 0.85;
+  line-height: 1.5;
+  font-weight: 400;
 }
 
 .banner-icon {
-  width: 120rpx;
-  height: 120rpx;
+  width: 140rpx;
+  height: 140rpx;
   margin-left: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.printer-image {
-  width: 100%;
-  height: 100%;
-  filter: brightness(0) invert(1);
-  opacity: 0.8;
+.printer-icon-large {
+  font-size: 80rpx;
+  opacity: 0.9;
+  filter: drop-shadow(0 4rpx 8rpx rgba(0, 0, 0, 0.2));
 }
 
 /* 快速操作 */
@@ -76,16 +83,34 @@ page {
 
 .quick-btn {
   width: 100%;
-  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+  background: linear-gradient(135deg, #1890ff, #096dd9);
   color: white;
   border: none;
-  border-radius: 50rpx;
-  padding: 30rpx;
+  border-radius: 60rpx;
+  padding: 40rpx 30rpx;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8rpx 20rpx rgba(255, 107, 107, 0.3);
+  box-shadow: 0 12rpx 32rpx rgba(24, 144, 255, 0.4);
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.quick-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.quick-btn:active::before {
+  left: 100%;
 }
 
 .quick-btn::after {
@@ -93,13 +118,20 @@ page {
 }
 
 .quick-btn-icon {
-  font-size: 40rpx;
-  margin-right: 15rpx;
+  font-size: 48rpx;
+  margin-bottom: 8rpx;
 }
 
 .quick-btn-text {
-  font-size: 36rpx;
-  font-weight: bold;
+  font-size: 38rpx;
+  font-weight: 700;
+  margin-bottom: 4rpx;
+}
+
+.quick-btn-desc {
+  font-size: 26rpx;
+  opacity: 0.9;
+  font-weight: 400;
 }
 
 /* 内容区域 */
@@ -109,17 +141,24 @@ page {
 
 .section-header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 30rpx;
-  padding-top: 20rpx;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 40rpx;
+  padding-top: 30rpx;
 }
 
 .section-title {
-  font-size: 36rpx;
-  color: #333;
-  font-weight: bold;
+  font-size: 40rpx;
+  color: #1a1a1a;
+  font-weight: 700;
   position: relative;
+  margin-bottom: 8rpx;
+}
+
+.section-subtitle {
+  font-size: 28rpx;
+  color: #666;
+  font-weight: 400;
 }
 
 .section-title::before {
@@ -140,84 +179,104 @@ page {
   font-weight: normal;
 }
 
-/* 功能网格 */
-.function-grid {
+/* 服务网格 */
+.service-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20rpx;
-  margin-bottom: 50rpx;
+  gap: 30rpx;
+  margin-bottom: 60rpx;
 }
 
-.function-item {
-  background-color: white;
-  border-radius: 20rpx;
-  padding: 40rpx 20rpx;
+.service-item {
+  background: white;
+  border-radius: 24rpx;
+  padding: 50rpx 35rpx;
   text-align: center;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  border: 2rpx solid transparent;
 }
 
-.function-item::before {
+.service-item:active {
+  transform: translateY(-6rpx);
+  box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, 0.2);
+}
+
+.service-item.primary {
+  border-color: #1890ff;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e6f7ff 100%);
+}
+
+.service-item::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 6rpx;
-  background: linear-gradient(90deg, #667eea, #764ba2);
+  height: 8rpx;
+  background: linear-gradient(135deg, #1890ff, #096dd9);
+  border-radius: 24rpx 24rpx 0 0;
 }
 
-.function-item.upload::before {
-  background: linear-gradient(90deg, #4facfe, #00f2fe);
+.service-item.primary::before {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
 }
 
-.function-item.orders::before {
-  background: linear-gradient(90deg, #43e97b, #38f9d7);
+.service-icon-wrapper {
+  margin-bottom: 30rpx;
+  position: relative;
 }
 
-.function-item.price::before {
-  background: linear-gradient(90deg, #fa709a, #fee140);
-}
-
-.function-item.help::before {
-  background: linear-gradient(90deg, #a8edea, #fed6e3);
-}
-
-.function-icon-wrapper {
-  margin-bottom: 25rpx;
-}
-
-.function-icon {
-  width: 100rpx;
-  height: 100rpx;
+.service-icon {
+  width: 120rpx;
+  height: 120rpx;
   margin: 0 auto;
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8rpx 16rpx rgba(240, 147, 251, 0.3);
+  box-shadow: 0 12rpx 24rpx rgba(102, 126, 234, 0.3);
+}
+
+.service-icon.primary {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+  box-shadow: 0 12rpx 24rpx rgba(255, 107, 107, 0.4);
 }
 
 .icon-emoji {
-  font-size: 50rpx;
+  font-size: 56rpx;
   filter: grayscale(1) brightness(0) invert(1);
 }
 
-.function-title {
-  font-size: 32rpx;
-  color: #333;
-  font-weight: bold;
+.service-title {
+  font-size: 36rpx;
+  color: #1a1a1a;
+  font-weight: 700;
   display: block;
-  margin-bottom: 12rpx;
+  margin-bottom: 16rpx;
 }
 
-.function-desc {
-  font-size: 26rpx;
+.service-desc {
+  font-size: 28rpx;
   color: #666;
-  line-height: 1.4;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+.service-badge {
+  position: absolute;
+  top: -8rpx;
+  right: -8rpx;
+  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+  color: white;
+  font-size: 20rpx;
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+  font-weight: 600;
+  box-shadow: 0 4rpx 12rpx rgba(255, 107, 107, 0.4);
 }
 
 /* 统计信息 */

@@ -3,19 +3,22 @@ App({
   globalData: {
     userInfo: null,
     token: null,
-    baseUrl: 'http://localhost:8080/api', // 后端API地址
+    baseUrl: 'http://localhost:8082/api', // 后端API地址
     ossBaseUrl: '', // OSS文件访问地址
     isLogin: false
   },
 
   onLaunch() {
     console.log('云打印小程序启动');
-    
-    // 检查登录状态
-    this.checkLoginStatus();
-    
-    // 获取系统信息
-    this.getSystemInfo();
+
+    // 延迟执行初始化操作，避免过早调用API
+    setTimeout(() => {
+      // 检查登录状态
+      this.checkLoginStatus();
+
+      // 获取系统信息
+      this.getSystemInfo();
+    }, 100);
   },
 
   onShow() {
@@ -28,19 +31,35 @@ App({
 
   onError(msg) {
     console.error('小程序错误：', msg);
+
+    // 过滤掉jsbridge相关的错误，避免重复报告
+    if (msg && msg.includes && msg.includes('jsbridge')) {
+      console.log('jsbridge错误已忽略，这通常是开发工具的兼容性问题');
+      return;
+    }
+
+    // 其他错误可以进行上报或处理
+    if (msg && !msg.includes('reportKeyValue')) {
+      // 可以在这里添加错误上报逻辑
+      console.error('需要处理的错误：', msg);
+    }
   },
 
   /**
    * 检查登录状态
    */
   checkLoginStatus() {
-    const token = wx.getStorageSync('token');
-    const userInfo = wx.getStorageSync('userInfo');
-    
-    if (token && userInfo) {
-      this.globalData.token = token;
-      this.globalData.userInfo = userInfo;
-      this.globalData.isLogin = true;
+    try {
+      const token = wx.getStorageSync('token');
+      const userInfo = wx.getStorageSync('userInfo');
+
+      if (token && userInfo) {
+        this.globalData.token = token;
+        this.globalData.userInfo = userInfo;
+        this.globalData.isLogin = true;
+      }
+    } catch (error) {
+      console.error('检查登录状态失败：', error);
     }
   },
 
@@ -48,12 +67,27 @@ App({
    * 获取系统信息
    */
   getSystemInfo() {
-    wx.getSystemInfo({
-      success: (res) => {
-        this.globalData.systemInfo = res;
-        console.log('系统信息：', res);
-      }
-    });
+    try {
+      wx.getSystemInfo({
+        success: (res) => {
+          this.globalData.systemInfo = res;
+          console.log('系统信息：', res);
+        },
+        fail: (error) => {
+          console.error('获取系统信息失败：', error);
+          // 重试机制
+          setTimeout(() => {
+            this.getSystemInfo();
+          }, 1000);
+        }
+      });
+    } catch (error) {
+      console.error('获取系统信息异常：', error);
+      // 重试机制
+      setTimeout(() => {
+        this.getSystemInfo();
+      }, 1000);
+    }
   },
 
   /**

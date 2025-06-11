@@ -5,6 +5,11 @@ import com.printercloud.dto.LoginResponse;
 import com.printercloud.entity.User;
 import com.printercloud.service.UserService;
 import com.printercloud.util.JwtUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,10 +19,11 @@ import java.util.Map;
 
 /**
  * 认证控制器
- * 
+ *
  * @author PrinterCloud
  * @since 2024-01-01
  */
+@Tag(name = "认证管理", description = "用户认证相关接口")
 @RestController
 @RequestMapping("/auth")
 @CrossOrigin(origins = "*")
@@ -32,8 +38,15 @@ public class AuthController {
     /**
      * 统一登录接口
      */
+    @Operation(summary = "用户登录", description = "支持管理员登录和微信登录")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "登录成功"),
+        @ApiResponse(responseCode = "401", description = "认证失败"),
+        @ApiResponse(responseCode = "500", description = "服务器错误")
+    })
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<Map<String, Object>> login(
+            @Parameter(description = "登录请求参数", required = true) @RequestBody LoginRequest request) {
         Map<String, Object> response = new HashMap<>();
         
         try {
@@ -80,8 +93,10 @@ public class AuthController {
     /**
      * 获取当前用户信息
      */
+    @Operation(summary = "获取当前用户信息", description = "根据token获取当前登录用户的详细信息")
     @GetMapping("/userinfo")
-    public ResponseEntity<Map<String, Object>> getUserInfo(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<Map<String, Object>> getUserInfo(
+            @Parameter(description = "JWT Token", required = true) @RequestHeader("Authorization") String token) {
         Map<String, Object> response = new HashMap<>();
         
         try {
@@ -183,6 +198,41 @@ public class AuthController {
             response.put("message", "修改密码失败: " + e.getMessage());
         }
         
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 获取用户统计数据
+     */
+    @GetMapping("/user/stats")
+    public ResponseEntity<Map<String, Object>> getUserStats(
+            @RequestHeader("Authorization") String token) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            // 移除Bearer前缀
+            if (token.startsWith("Bearer ")) {
+                token = token.substring(7);
+            }
+
+            User currentUser = userService.validateTokenAndGetUser(token);
+            if (currentUser == null) {
+                response.put("code", 401);
+                response.put("message", "token无效");
+                return ResponseEntity.ok(response);
+            }
+
+            // 获取用户统计数据
+            Map<String, Object> stats = userService.getUserStatistics(currentUser.getId());
+
+            response.put("code", 200);
+            response.put("message", "获取成功");
+            response.put("data", stats);
+        } catch (Exception e) {
+            response.put("code", 500);
+            response.put("message", "获取用户统计失败: " + e.getMessage());
+        }
+
         return ResponseEntity.ok(response);
     }
 

@@ -1,0 +1,52 @@
+# 测试环境配置
+server:
+  port: 0  # 随机端口，避免测试时端口冲突
+
+spring:
+  # 数据库配置 - 使用内存数据库
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  
+  # JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: create-drop  # 测试时每次重新创建表
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+  
+  # H2控制台配置
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  
+  # 文件上传配置
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+# 日志配置
+logging:
+  level:
+    com.printercloud: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+# JWT配置
+jwt:
+  secret: test-secret-key-for-testing-only
+  expiration: 86400000  # 24小时
+
+# 文件存储配置
+file:
+  upload:
+    path: ./test-uploads/
+    max-size: 10485760  # 10MB

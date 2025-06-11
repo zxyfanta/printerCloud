@@ -8,7 +8,12 @@ Page({
     loading: false,
     page: 1,
     pageSize: 10,
-    hasMore: true
+    hasMore: true,
+    stats: {
+      totalOrders: 0,
+      totalPages: 0,
+      totalAmount: 0
+    }
   },
 
   onLoad() {
@@ -18,6 +23,7 @@ Page({
   onShow() {
     console.log('订单页面显示');
     this.loadOrderList(true);
+    this.loadUserStats();
   },
 
   /**
@@ -51,7 +57,17 @@ Page({
       data: params
     }).then(res => {
       if (res.code === 200) {
-        const orders = res.data.records.map(order => ({
+        // 处理不同的数据结构
+        let orderData = [];
+        if (res.data && res.data.records) {
+          orderData = res.data.records;
+        } else if (res.data && Array.isArray(res.data)) {
+          orderData = res.data;
+        } else if (res.data) {
+          orderData = [res.data];
+        }
+
+        const orders = orderData.map(order => ({
           ...order,
           statusClass: this.getStatusClass(order.status),
           statusText: this.getStatusText(order.status),
@@ -73,6 +89,8 @@ Page({
           hasMore: orders.length === this.data.pageSize,
           page: this.data.page + 1
         });
+      } else {
+        app.showError(res.message || '加载订单失败');
       }
     }).catch(err => {
       console.error('加载订单列表失败：', err);
@@ -163,6 +181,24 @@ Page({
       title: '联系客服',
       content: '如有问题，请拨打客服电话：400-123-4567',
       showCancel: false
+    });
+  },
+
+  /**
+   * 加载用户统计数据
+   */
+  loadUserStats() {
+    app.request({
+      url: '/auth/user/stats',
+      method: 'GET'
+    }).then(res => {
+      if (res.code === 200) {
+        this.setData({
+          stats: res.data
+        });
+      }
+    }).catch(err => {
+      console.error('加载统计数据失败：', err);
     });
   },
 

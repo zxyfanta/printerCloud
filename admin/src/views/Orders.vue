@@ -53,8 +53,8 @@
           </el-col>
           <el-col :span="4">
             <el-radio-group v-model="viewMode" @change="handleViewModeChange">
-              <el-radio-button label="card">卡片</el-radio-button>
-              <el-radio-button label="table">表格</el-radio-button>
+              <el-radio-button value="card">卡片</el-radio-button>
+              <el-radio-button value="table">表格</el-radio-button>
             </el-radio-group>
           </el-col>
         </el-row>

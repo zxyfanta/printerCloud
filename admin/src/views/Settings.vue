@@ -23,8 +23,8 @@
           >
             <el-form-item label="更新方式" prop="updateMode">
               <el-radio-group v-model="pollingSettings.updateMode" @change="handleUpdateModeChange">
-                <el-radio label="polling">轮询刷新</el-radio>
-                <el-radio label="websocket" disabled>WebSocket实时推送（开发中）</el-radio>
+                <el-radio value="polling">轮询刷新</el-radio>
+                <el-radio value="websocket" disabled>WebSocket实时推送（开发中）</el-radio>
               </el-radio-group>
               <div class="form-tip">
                 当前使用轮询模式定期刷新数据，WebSocket功能正在开发中
@@ -70,10 +70,10 @@
                 @change="applyPreset"
                 :disabled="!pollingSettings.enabled || pollingSettings.updateMode !== 'polling'"
               >
-                <el-radio :label="3000">3秒（快速）</el-radio>
-                <el-radio :label="5000">5秒（推荐）</el-radio>
-                <el-radio :label="10000">10秒（节能）</el-radio>
-                <el-radio :label="30000">30秒（低频）</el-radio>
+                <el-radio :value="3000">3秒（快速）</el-radio>
+                <el-radio :value="5000">5秒（推荐）</el-radio>
+                <el-radio :value="10000">10秒（节能）</el-radio>
+                <el-radio :value="30000">30秒（低频）</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-form>
@@ -132,8 +132,8 @@
           >
             <el-form-item label="默认视图模式">
               <el-radio-group v-model="displaySettings.defaultViewMode">
-                <el-radio label="card">卡片视图</el-radio>
-                <el-radio label="table">表格视图</el-radio>
+                <el-radio value="card">卡片视图</el-radio>
+                <el-radio value="table">表格视图</el-radio>
               </el-radio-group>
               <div class="form-tip">
                 设置订单列表的默认显示模式

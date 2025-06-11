@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -124,4 +125,23 @@ public interface PrintOrderRepository extends JpaRepository<PrintOrder, Long> {
      */
     @Query("SELECT SUM(o.amount) FROM PrintOrder o WHERE o.status = :status")
     Double sumAmountByStatus(@Param("status") Integer status);
+
+    // 用户统计相关方法
+
+    /**
+     * 统计用户订单总数
+     */
+    Long countByUserId(Long userId);
+
+    /**
+     * 统计用户打印总页数
+     */
+    @Query("SELECT SUM(o.copies * o.pageCount) FROM PrintOrder o WHERE o.userId = :userId")
+    Long sumPagesByUserId(@Param("userId") Long userId);
+
+    /**
+     * 统计用户订单总金额
+     */
+    @Query("SELECT SUM(o.amount) FROM PrintOrder o WHERE o.userId = :userId")
+    BigDecimal sumAmountByUserId(@Param("userId") Long userId);
 }

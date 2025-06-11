@@ -1,0 +1,262 @@
+/* confirm.wxss */
+page {
+  background-color: #f8f9fa;
+}
+
+/* 页面标题 */
+.page-header {
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  padding: 60rpx 30rpx 40rpx;
+  color: white;
+  text-align: center;
+}
+
+.page-title {
+  font-size: 40rpx;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 12rpx;
+  text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.3);
+}
+
+.page-subtitle {
+  font-size: 28rpx;
+  opacity: 0.9;
+  font-weight: 400;
+}
+
+/* 内容区域 */
+.content {
+  padding: 0 30rpx 40rpx;
+  margin-top: -20rpx;
+  position: relative;
+  z-index: 10;
+}
+
+/* 卡片样式 */
+.section-card {
+  background: white;
+  border-radius: 20rpx;
+  margin-bottom: 30rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+}
+
+.section-header {
+  padding: 30rpx 30rpx 20rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.section-title {
+  font-size: 32rpx;
+  color: #1a1a1a;
+  font-weight: 700;
+}
+
+.edit-btn {
+  background: #f0f8ff;
+  color: #1890ff;
+  border: 1rpx solid #1890ff;
+  border-radius: 30rpx;
+  padding: 12rpx 24rpx;
+  font-size: 26rpx;
+  font-weight: 500;
+}
+
+.edit-btn::after {
+  border: none;
+}
+
+.edit-text {
+  color: #1890ff;
+}
+
+/* 文件信息 */
+.file-info {
+  padding: 20rpx 30rpx 30rpx;
+  display: flex;
+  align-items: center;
+}
+
+.file-icon {
+  width: 80rpx;
+  height: 80rpx;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+  font-size: 36rpx;
+}
+
+.file-details {
+  flex: 1;
+}
+
+.file-name {
+  font-size: 32rpx;
+  color: #1a1a1a;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 8rpx;
+  word-break: break-all;
+}
+
+.file-desc {
+  font-size: 26rpx;
+  color: #666;
+}
+
+/* 配置列表 */
+.config-list {
+  padding: 0 30rpx 30rpx;
+}
+
+.config-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.config-item:last-child {
+  border-bottom: none;
+}
+
+.config-label {
+  font-size: 30rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.config-value {
+  font-size: 30rpx;
+  color: #1890ff;
+  font-weight: 600;
+}
+
+/* 价格列表 */
+.price-list {
+  padding: 0 30rpx 20rpx;
+}
+
+.price-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16rpx 0;
+}
+
+.price-label {
+  font-size: 28rpx;
+  color: #666;
+}
+
+.price-value {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.price-value.discount {
+  color: #52c41a;
+}
+
+.price-total {
+  padding: 20rpx 30rpx;
+  background: #f8f9fa;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.total-label {
+  font-size: 32rpx;
+  color: #1a1a1a;
+  font-weight: 700;
+}
+
+.total-amount {
+  font-size: 36rpx;
+  color: #1890ff;
+  font-weight: 700;
+}
+
+/* 支付说明 */
+.payment-tips {
+  margin-bottom: 40rpx;
+}
+
+.tip-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 20rpx;
+  padding: 20rpx;
+  background: white;
+  border-radius: 16rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.tip-item:last-child {
+  margin-bottom: 0;
+}
+
+.tip-icon {
+  font-size: 28rpx;
+  margin-right: 12rpx;
+  margin-top: 2rpx;
+}
+
+.tip-text {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.5;
+  flex: 1;
+}
+
+/* 操作按钮 */
+.action-buttons {
+  display: flex;
+  gap: 20rpx;
+  margin-bottom: 40rpx;
+}
+
+.btn {
+  flex: 1;
+  padding: 28rpx;
+  border-radius: 50rpx;
+  border: none;
+  font-size: 32rpx;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn.secondary {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.btn.primary {
+  background: linear-gradient(135deg, #1890ff, #096dd9);
+  color: white;
+  box-shadow: 0 8rpx 20rpx rgba(24, 144, 255, 0.3);
+}
+
+.btn.primary:disabled {
+  background: #d9d9d9;
+  color: #999;
+  box-shadow: none;
+}
+
+.btn::after {
+  border: none;
+}
+
+.btn-text {
+  color: inherit;
+}

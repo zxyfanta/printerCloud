@@ -6,11 +6,6 @@ Page({
     recentOrders: [],
     showPriceModal: false,
     showHelpModal: false,
-    stats: {
-      totalOrders: 0,
-      totalPages: 0,
-      totalAmount: 0
-    },
     priceList: [
       { label: '黑白打印', value: '¥0.1/页', type: 'bw' },
       { label: '彩色打印', value: '¥0.5/页', type: 'color' },
@@ -21,15 +16,20 @@ Page({
 
   onLoad() {
     console.log('首页加载');
-    this.checkLogin();
+    // 延迟执行，确保小程序完全初始化
+    setTimeout(() => {
+      this.checkLogin();
+    }, 200);
   },
 
   onShow() {
     console.log('首页显示');
-    if (app.globalData.isLogin) {
-      this.loadRecentOrders();
-      this.loadUserStats();
-    }
+    // 延迟执行，避免过早调用API
+    setTimeout(() => {
+      if (app.globalData.isLogin) {
+        this.loadRecentOrders();
+      }
+    }, 100);
   },
 
   /**
@@ -40,7 +40,6 @@ Page({
       // 自动登录
       app.wxLogin().then(() => {
         this.loadRecentOrders();
-        this.loadUserStats();
       }).catch(err => {
         console.error('自动登录失败：', err);
         // 登录失败时显示离线模式
@@ -48,7 +47,6 @@ Page({
       });
     } else {
       this.loadRecentOrders();
-      this.loadUserStats();
     }
   },
 
@@ -78,27 +76,7 @@ Page({
     });
   },
 
-  /**
-   * 加载用户统计数据
-   */
-  loadUserStats() {
-    app.request({
-      url: '/user/stats',
-      method: 'GET'
-    }).then(res => {
-      if (res.code === 200) {
-        this.setData({
-          stats: {
-            totalOrders: res.data.totalOrders || 0,
-            totalPages: res.data.totalPages || 0,
-            totalAmount: res.data.totalAmount ? res.data.totalAmount.toFixed(2) : '0.00'
-          }
-        });
-      }
-    }).catch(err => {
-      console.error('加载统计数据失败：', err);
-    });
-  },
+
 
   /**
    * 显示离线模式
@@ -185,6 +163,36 @@ Page({
   },
 
   /**
+   * 跳转到二手商品页面
+   */
+  goToSecondHand() {
+    wx.showToast({
+      title: '功能开发中',
+      icon: 'none'
+    });
+  },
+
+  /**
+   * 跳转到优惠购页面
+   */
+  goToDiscount() {
+    wx.showToast({
+      title: '功能开发中',
+      icon: 'none'
+    });
+  },
+
+  /**
+   * 跳转到电子产品页面
+   */
+  goToElectronics() {
+    wx.showToast({
+      title: '功能开发中',
+      icon: 'none'
+    });
+  },
+
+  /**
    * 跳转到订单详情
    */
   goToOrderDetail(e) {
@@ -242,7 +250,6 @@ Page({
    */
   onPullDownRefresh() {
     this.loadRecentOrders();
-    this.loadUserStats();
     wx.stopPullDownRefresh();
   },
 

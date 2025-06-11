@@ -1,2 +1,94 @@
 <!--pages/preview/preview.wxml-->
-<text>pages/preview/preview.wxml</text>
+<view class="page">
+  <!-- 页面标题 -->
+  <view class="page-header">
+    <text class="page-title">文件预览</text>
+    <text class="page-subtitle">支持PDF、Word、Excel、PPT等格式</text>
+  </view>
+
+  <view class="content">
+    <!-- 文件信息卡片 -->
+    <view class="file-info-card">
+      <view class="file-icon-wrapper">
+        <text class="file-icon">{{fileInfo.icon || '📄'}}</text>
+      </view>
+
+      <view class="file-details">
+        <text class="file-name">{{fileInfo.name || '未知文件'}}</text>
+        <text class="file-size">{{fileInfo.sizeText || '未知大小'}}</text>
+        <text class="file-type">{{fileInfo.typeText || '未知格式'}}</text>
+      </view>
+    </view>
+
+    <!-- 预览状态 -->
+    <view class="preview-status" wx:if="{{!isReady}}">
+      <view class="status-icon">
+        <text wx:if="{{isDownloading}}">⏬</text>
+        <text wx:elif="{{hasError}}">❌</text>
+        <text wx:else>⏳</text>
+      </view>
+
+      <text class="status-text" wx:if="{{isDownloading}}">正在下载文件...</text>
+      <text class="status-text" wx:elif="{{hasError}}">{{errorMessage}}</text>
+      <text class="status-text" wx:else>准备预览</text>
+
+      <!-- 下载进度 -->
+      <view class="progress-bar" wx:if="{{isDownloading && downloadProgress > 0}}">
+        <view class="progress-fill" style="width: {{downloadProgress}}%"></view>
+      </view>
+      <text class="progress-text" wx:if="{{isDownloading && downloadProgress > 0}}">{{downloadProgress}}%</text>
+    </view>
+
+    <!-- 预览操作 -->
+    <view class="preview-actions" wx:if="{{isReady}}">
+      <view class="success-tip">
+        <text class="tip-icon">✅</text>
+        <text class="tip-text">文件已准备就绪，点击下方按钮开始预览</text>
+      </view>
+
+      <button class="btn primary large" bindtap="openDocument">
+        <text class="btn-text">📖 打开预览</text>
+      </button>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="action-buttons">
+      <button class="btn secondary" bindtap="goBack">
+        <text class="btn-text">返回</text>
+      </button>
+
+      <button class="btn primary" bindtap="startPreview" wx:if="{{!isReady && !isDownloading}}">
+        <text class="btn-text">开始预览</text>
+      </button>
+
+      <button class="btn primary" bindtap="goToConfig" wx:if="{{isReady}}">
+        <text class="btn-text">继续配置</text>
+      </button>
+    </view>
+
+    <!-- 支持格式说明 -->
+    <view class="format-tips">
+      <view class="tip-header">
+        <text class="tip-title">📋 支持格式</text>
+      </view>
+      <view class="format-list">
+        <view class="format-item">
+          <text class="format-icon">📄</text>
+          <text class="format-text">PDF文档</text>
+        </view>
+        <view class="format-item">
+          <text class="format-icon">📝</text>
+          <text class="format-text">Word文档 (.doc/.docx)</text>
+        </view>
+        <view class="format-item">
+          <text class="format-icon">📊</text>
+          <text class="format-text">Excel表格 (.xls/.xlsx)</text>
+        </view>
+        <view class="format-item">
+          <text class="format-icon">📈</text>
+          <text class="format-text">PowerPoint (.ppt/.pptx)</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

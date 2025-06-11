@@ -26,14 +26,14 @@
           <view class="file-header">
             <view class="file-icon-wrapper">
               <view class="file-icon">
-                <text class="file-emoji">{{getFileIcon(fileInfo.type)}}</text>
+                <text class="file-emoji">{{fileInfo.icon}}</text>
               </view>
             </view>
             <view class="file-details">
               <text class="file-name">{{fileInfo.name}}</text>
               <view class="file-meta">
-                <text class="file-size">{{formatFileSize(fileInfo.size)}}</text>
-                <text class="file-type">{{getFileTypeName(fileInfo.type)}}</text>
+                <text class="file-size">{{fileInfo.sizeText}}</text>
+                <text class="file-type">{{fileInfo.typeName}}</text>
               </view>
             </view>
           </view>
@@ -63,48 +63,56 @@
       </view>
     </view>
 
-    <!-- 文件预览 -->
-    <view class="file-preview-section" wx:if="{{fileInfo && fileInfo.uploaded}}">
+    <!-- 本地文件预览 -->
+    <view class="file-preview-section" wx:if="{{showPreview && fileInfo}}">
       <view class="preview-card">
         <view class="preview-header">
-          <text class="preview-title">文件信息</text>
-          <view class="page-info" wx:if="{{fileInfo.pageCount}}">
-            <text class="page-count">共 {{fileInfo.pageCount}} 页</text>
-          </view>
+          <text class="preview-title">文件预览</text>
+          <text class="preview-subtitle">确认文件内容后进行打印配置</text>
         </view>
 
         <!-- 图片预览 -->
-        <view class="image-preview" wx:if="{{isImageFile(fileInfo.type)}}">
-          <image src="{{fileInfo.url}}" mode="aspectFit" class="preview-image"></image>
-        </view>
-
-        <!-- PDF预览 -->
-        <view class="pdf-preview" wx:if="{{isPdfFile(fileInfo.type)}}">
-          <view class="preview-placeholder">
-            <text class="placeholder-icon">📄</text>
-            <text class="placeholder-text">PDF文件已准备就绪</text>
-            <text class="placeholder-desc">点击下一步进行打印配置</text>
+        <view class="image-preview" wx:if="{{fileInfo.isImage}}">
+          <image src="{{fileInfo.path}}" mode="aspectFit" class="preview-image"></image>
+          <view class="preview-info">
+            <text class="info-text">图片文件 · 预计1页</text>
           </view>
         </view>
 
-        <!-- 其他文件类型 -->
-        <view class="other-preview" wx:if="{{!isImageFile(fileInfo.type) && !isPdfFile(fileInfo.type)}}">
+        <!-- 文档预览 -->
+        <view class="document-preview" wx:if="{{!fileInfo.isImage}}">
           <view class="preview-placeholder">
-            <text class="placeholder-icon">📄</text>
-            <text class="placeholder-text">文件已准备就绪</text>
-            <text class="placeholder-desc">点击下一步进行打印配置</text>
+            <text class="placeholder-icon">{{fileInfo.icon}}</text>
+            <text class="placeholder-text">{{fileInfo.name}}</text>
+            <text class="placeholder-desc">{{fileInfo.sizeText}}</text>
+            <text class="placeholder-note">文件已选择，点击下一步进行打印配置</text>
+          </view>
+        </view>
+
+        <!-- 预览提示 -->
+        <view class="preview-tips">
+          <view class="tip-item">
+            <text class="tip-icon">💡</text>
+            <text class="tip-text">支持PDF、Word、Excel、PPT等格式</text>
+          </view>
+          <view class="tip-item">
+            <text class="tip-icon">🔒</text>
+            <text class="tip-text">确认订单并付费后才会上传到服务器</text>
           </view>
         </view>
       </view>
     </view>
 
     <!-- 操作按钮 -->
-    <view class="action-buttons" wx:if="{{fileInfo && fileInfo.uploaded}}">
-      <button class="btn secondary" bindtap="goBack">
-        <text class="btn-text">返回首页</text>
+    <view class="action-buttons" wx:if="{{showPreview && fileInfo}}">
+      <button class="btn secondary" bindtap="removeFile">
+        <text class="btn-text">重新选择</text>
+      </button>
+      <button class="btn secondary" bindtap="goToPreview">
+        <text class="btn-text">📖 预览文件</text>
       </button>
       <button class="btn primary" bindtap="goToConfig">
-        <text class="btn-text">下一步：打印设置</text>
+        <text class="btn-text">下一步：打印配置</text>
       </button>
     </view>
   </view>

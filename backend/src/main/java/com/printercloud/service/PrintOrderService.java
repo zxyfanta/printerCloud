@@ -343,9 +343,9 @@ public class PrintOrderService {
     }
 
     /**
-     * 更新订单状态
+     * 更新订单状态（字符串参数版本）
      */
-    public boolean updateOrderStatus(Long orderId, String statusStr) {
+    public boolean updateOrderStatusByString(Long orderId, String statusStr) {
         Optional<PrintOrder> optionalOrder = orderRepository.findById(orderId);
         if (optionalOrder.isPresent()) {
             PrintOrder order = optionalOrder.get();
@@ -356,7 +356,11 @@ public class PrintOrderService {
                 if (order.getStatus() == 1) { // 已支付
                     order.setStatus(2); // 打印中
                     order.setUpdateTime(LocalDateTime.now());
-                    orderRepository.save(order);
+                    PrintOrder updatedOrder = orderRepository.save(order);
+
+                    // 发送WebSocket通知
+                    webSocketNotificationService.sendOrderUpdateNotification(updatedOrder, "PRINTING");
+
                     return true;
                 }
             }

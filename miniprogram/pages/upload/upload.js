@@ -5,11 +5,18 @@ Page({
   data: {
     fileInfo: null,
     uploading: false,
-    uploadProgress: 0
+    uploadProgress: 0,
+    showPreview: false,
+    previewPages: []
   },
 
   onLoad() {
     console.log('文件上传页面加载');
+  },
+
+  onReady() {
+    // 页面渲染完成后再执行相关操作
+    console.log('文件上传页面渲染完成');
   },
 
   /**
@@ -84,20 +91,27 @@ Page({
     wx.getFileInfo({
       filePath: filePath,
       success: (res) => {
+        const fileType = fileType || this.getFileTypeFromPath(filePath);
         const fileInfo = {
           path: filePath,
           name: fileName || this.getFileNameFromPath(filePath),
           size: fileSize || res.size,
-          type: fileType || this.getFileTypeFromPath(filePath),
-          uploaded: false
+          type: fileType,
+          uploaded: false,
+          // 预处理显示数据
+          icon: this.getFileIcon(fileType),
+          sizeText: this.formatFileSize(fileSize || res.size),
+          typeName: this.getFileTypeName(fileType),
+          isImage: this.isImageFile(fileType)
         };
 
         this.setData({
-          fileInfo: fileInfo
+          fileInfo: fileInfo,
+          showPreview: true
         });
 
-        // 开始上传
-        this.uploadFile(fileInfo);
+        // 生成本地预览
+        this.generateLocalPreview(fileInfo);
       },
       fail: (err) => {
         console.error('获取文件信息失败：', err);
@@ -107,67 +121,30 @@ Page({
   },
 
   /**
-   * 上传文件
+   * 生成本地预览
    */
-  uploadFile(fileInfo) {
-    const that = this;
-    
-    this.setData({
-      uploading: true,
-      uploadProgress: 0
-    });
-
-    const uploadTask = wx.uploadFile({
-      url: app.globalData.baseUrl + '/file/upload',
-      filePath: fileInfo.path,
-      name: 'file',
-      formData: {
-        fileName: fileInfo.name
-      },
-      header: {
-        'Authorization': app.globalData.token ? `Bearer ${app.globalData.token}` : ''
-      },
-      success: (res) => {
-        if (res.statusCode === 200) {
-          const data = JSON.parse(res.data);
-          if (data.code === 200) {
-            // 上传成功
-            const updatedFileInfo = {
-              ...fileInfo,
-              uploaded: true,
-              fileId: data.data.fileId,
-              url: data.data.url,
-              pageCount: data.data.pageCount
-            };
-            
-            that.setData({
-              fileInfo: updatedFileInfo,
-              uploading: false
-            });
-            
-            app.showSuccess('文件上传成功');
-          } else {
-            throw new Error(data.message);
-          }
-        } else {
-          throw new Error(`上传失败：${res.statusCode}`);
-        }
-      },
-      fail: (err) => {
-        console.error('文件上传失败：', err);
-        that.setData({
-          uploading: false
-        });
-        app.showError('文件上传失败');
-      }
-    });
-
-    // 监听上传进度
-    uploadTask.onProgressUpdate((res) => {
-      that.setData({
-        uploadProgress: res.progress
+  generateLocalPreview(fileInfo) {
+    if (this.isImageFile(fileInfo.type)) {
+      // 图片文件直接预览
+      this.setData({
+        previewPages: [{
+          type: 'image',
+          url: fileInfo.path,
+          pageNumber: 1
+        }]
       });
-    });
+    } else {
+      // 其他文件类型显示文件信息
+      this.setData({
+        previewPages: [{
+          type: 'document',
+          name: fileInfo.name,
+          size: this.formatFileSize(fileInfo.size),
+          icon: this.getFileIcon(fileInfo.type),
+          pageNumber: 1
+        }]
+      });
+    }
   },
 
   /**
@@ -182,16 +159,36 @@ Page({
   },
 
   /**
-   * 跳转到配置页面
+   * 跳转到预览页面
    */
-  goToConfig() {
-    if (!this.data.fileInfo || !this.data.fileInfo.uploaded) {
-      app.showError('请先上传文件');
+  goToPreview() {
+    if (!this.data.fileInfo) {
+      app.showError('请先选择文件');
       return;
     }
 
+    // 将文件信息存储到全局数据中
+    app.globalData.tempFileInfo = this.data.fileInfo;
+
     wx.navigateTo({
-      url: `/pages/config/config?fileId=${this.data.fileInfo.fileId}`
+      url: '/pages/preview/preview'
+    });
+  },
+
+  /**
+   * 跳转到配置页面
+   */
+  goToConfig() {
+    if (!this.data.fileInfo) {
+      app.showError('请先选择文件');
+      return;
+    }
+
+    // 将文件信息存储到全局数据中
+    app.globalData.tempFileInfo = this.data.fileInfo;
+
+    wx.navigateTo({
+      url: '/pages/config/config'
     });
   },
 

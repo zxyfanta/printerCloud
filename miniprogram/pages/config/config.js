@@ -3,7 +3,6 @@ const app = getApp();
 
 Page({
   data: {
-    fileId: null,
     fileInfo: {},
     printConfig: {
       copies: 1,
@@ -17,102 +16,65 @@ Page({
     priceConfig: {
       blackWhite: 0.1,
       color: 0.5,
-      doubleSideDiscount: 0.8
+      doubleSideDiscount: 0.8,
+      doubleSideDiscountText: '8折',
+      doubleSideDiscountPercentText: '-20%'
     },
     paperSizes: ['A4', 'A3', 'A5'],
     paperSizeIndex: 0,
-    calculatedPages: 0,
+    calculatedPages: 1,
     unitPrice: 0.1,
-    totalAmount: 0,
-    canCreateOrder: false
+    totalAmount: 0.1,
+    canCreateOrder: true
   },
 
   onLoad(options) {
     console.log('打印配置页面加载', options);
-    
-    if (options.fileId) {
-      this.setData({ fileId: options.fileId });
-      this.loadFileInfo();
-    } else if (options.reorderId) {
-      this.loadReorderInfo(options.reorderId);
-    } else {
-      app.showError('缺少文件信息');
+    this.loadLocalFileInfo();
+  },
+
+  onReady() {
+    console.log('打印配置页面渲染完成');
+  },
+
+  /**
+   * 加载本地文件信息
+   */
+  loadLocalFileInfo() {
+    const tempFileInfo = app.globalData.tempFileInfo;
+    if (!tempFileInfo) {
+      app.showError('文件信息丢失，请重新选择');
       wx.navigateBack();
+      return;
     }
+
+    // 估算页数（图片文件为1页，其他文件根据大小估算）
+    let estimatedPages = 1;
+    if (tempFileInfo.type === 'image') {
+      estimatedPages = 1;
+    } else {
+      // 根据文件大小估算页数（每页约50KB）
+      estimatedPages = Math.max(1, Math.ceil(tempFileInfo.size / (50 * 1024)));
+    }
+
+    this.setData({
+      fileInfo: {
+        name: tempFileInfo.name,
+        pageCount: estimatedPages,
+        icon: this.getFileIcon(tempFileInfo.type),
+        size: this.formatFileSize(tempFileInfo.size),
+        localPath: tempFileInfo.path
+      },
+      calculatedPages: estimatedPages
+    });
+
+    this.calculatePrice();
+    this.checkCanCreateOrder();
   },
 
-  /**
-   * 加载文件信息
-   */
-  loadFileInfo() {
-    app.request({
-      url: `/file/${this.data.fileId}`,
-      method: 'GET'
-    }).then(res => {
-      if (res.code === 200) {
-        const fileInfo = {
-          ...res.data,
-          icon: this.getFileIcon(res.data.fileType),
-          size: this.formatFileSize(res.data.fileSize)
-        };
-        
-        this.setData({
-          fileInfo: fileInfo,
-          calculatedPages: fileInfo.pageCount || 1
-        });
-        
-        this.calculatePrice();
-        this.checkCanCreateOrder();
-      } else {
-        app.showError('获取文件信息失败');
-        wx.navigateBack();
-      }
-    }).catch(err => {
-      console.error('加载文件信息失败：', err);
-      app.showError('加载文件信息失败');
-      wx.navigateBack();
-    });
-  },
 
-  /**
-   * 加载重新打印订单信息
-   */
-  loadReorderInfo(reorderId) {
-    app.request({
-      url: `/order/${reorderId}`,
-      method: 'GET'
-    }).then(res => {
-      if (res.code === 200) {
-        const order = res.data;
-        this.setData({
-          fileId: order.fileId,
-          fileInfo: {
-            name: order.fileName,
-            pageCount: order.actualPages,
-            icon: this.getFileIcon(order.fileType),
-            size: this.formatFileSize(order.fileSize)
-          },
-          printConfig: {
-            copies: order.copies,
-            pageRangeType: order.pageRange ? 'custom' : 'all',
-            pageRange: order.pageRange || '',
-            isColor: order.isColor === 1,
-            isDoubleSide: order.isDoubleSide === 1,
-            paperSize: order.paperSize,
-            remark: order.remark || ''
-          },
-          calculatedPages: order.actualPages
-        });
-        
-        this.calculatePrice();
-        this.checkCanCreateOrder();
-      }
-    }).catch(err => {
-      console.error('加载订单信息失败：', err);
-      app.showError('加载订单信息失败');
-      wx.navigateBack();
-    });
-  },
+
+
 
   /**
    * 修改打印份数
@@ -319,42 +281,21 @@ Page({
       app.showError('请检查打印配置');
       return;
     }
-    
+
+    // 跳转到确认页面
     const orderData = {
-      fileId: this.data.fileId,
-      copies: this.data.printConfig.copies,
-      pageRange: this.data.printConfig.pageRangeType === 'custom' ? this.data.printConfig.pageRange : null,
-      actualPages: this.data.calculatedPages,
-      isColor: this.data.printConfig.isColor ? 1 : 0,
-      isDoubleSide: this.data.printConfig.isDoubleSide ? 1 : 0,
-      paperSize: this.data.printConfig.paperSize,
-      remark: this.data.printConfig.remark,
-      amount: parseFloat(this.data.totalAmount)
+      fileInfo: this.data.fileInfo,
+      printConfig: this.data.printConfig,
+      calculatedPages: this.data.calculatedPages,
+      unitPrice: this.data.unitPrice,
+      totalAmount: this.data.totalAmount
     };
-    
-    app.showLoading('创建订单中...');
-    
-    app.request({
-      url: '/orders',
-      method: 'POST',
-      data: orderData
-    }).then(res => {
-      app.hideLoading();
-      
-      if (res.code === 200) {
-        app.showSuccess('订单创建成功');
-        
-        // 跳转到支付页面
-        wx.redirectTo({
-          url: `/pages/payment/payment?orderId=${res.data.orderId}`
-        });
-      } else {
-        app.showError(res.message || '创建订单失败');
-      }
-    }).catch(err => {
-      app.hideLoading();
-      console.error('创建订单失败：', err);
-      app.showError('创建订单失败');
+
+    // 将订单数据存储到全局
+    app.globalData.tempOrderData = orderData;
+
+    wx.navigateTo({
+      url: '/pages/confirm/confirm'
     });
   },
 
