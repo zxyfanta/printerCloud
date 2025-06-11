@@ -335,7 +335,7 @@ Page({
     app.showLoading('创建订单中...');
     
     app.request({
-      url: '/order/create',
+      url: '/orders',
       method: 'POST',
       data: orderData
     }).then(res => {

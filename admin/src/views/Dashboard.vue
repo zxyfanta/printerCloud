@@ -66,7 +66,7 @@
           <template #header>
             <div class="card-header">
               <span>最近上传的文件</span>
-              <el-button type="text" @click="$router.push('/files')">查看更多</el-button>
+              <el-button link @click="$router.push('/files')">查看更多</el-button>
             </div>
           </template>
           <div v-loading="loading.files">
@@ -86,7 +86,7 @@
                     <div class="file-meta">{{ formatFileSize(file.fileSize) }} • {{ formatTime(file.createTime) }}</div>
                   </div>
                 </div>
-                <el-button type="text" @click="downloadFile(file)">下载</el-button>
+                <el-button link @click="downloadFile(file)">下载</el-button>
               </div>
             </div>
           </div>
@@ -98,7 +98,7 @@
           <template #header>
             <div class="card-header">
               <span>最近订单</span>
-              <el-button type="text" @click="$router.push('/orders')">查看更多</el-button>
+              <el-button link @click="$router.push('/orders')">查看更多</el-button>
             </div>
           </template>
           <div v-loading="loading.orders">
@@ -177,7 +177,7 @@ const loadRecentFiles = async () => {
 const loadRecentOrders = async () => {
   loading.orders = true
   try {
-    const response = await api.get('/order/list?page=1&size=5')
+    const response = await api.get('/orders?page=1&size=5')
     if (response.data.code === 200) {
       recentOrders.value = response.data.data.content || []
       stats.totalOrders = response.data.data.totalElements || 0

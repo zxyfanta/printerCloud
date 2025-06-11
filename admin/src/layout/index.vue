@@ -32,6 +32,10 @@
           <el-icon><Money /></el-icon>
           <span>价格管理</span>
         </el-menu-item>
+        <el-menu-item index="/settings">
+          <el-icon><Setting /></el-icon>
+          <span>系统设置</span>
+        </el-menu-item>
       </el-menu>
     </el-aside>
 

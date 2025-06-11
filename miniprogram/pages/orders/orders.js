@@ -46,7 +46,7 @@ Page({
     }
 
     app.request({
-      url: '/order/list',
+      url: '/orders',
       method: 'GET',
       data: params
     }).then(res => {
@@ -115,7 +115,7 @@ Page({
       success: (res) => {
         if (res.confirm) {
           app.request({
-            url: '/order/cancel',
+            url: '/orders/cancel',
             method: 'POST',
             data: { orderId: orderId }
           }).then(result => {

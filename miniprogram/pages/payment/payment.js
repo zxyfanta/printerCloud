@@ -30,7 +30,7 @@ Page({
     app.showLoading('加载订单信息...');
     
     app.request({
-      url: `/order/${this.data.orderId}`,
+      url: `/orders/${this.data.orderId}`,
       method: 'GET'
     }).then(res => {
       app.hideLoading();

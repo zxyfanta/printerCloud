@@ -62,6 +62,12 @@
             <artifactId>spring-security-crypto</artifactId>
         </dependency>
 
+        <!-- WebSocket -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+
         <!-- 文件上传 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

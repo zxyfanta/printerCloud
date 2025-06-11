@@ -57,7 +57,7 @@ Page({
    */
   loadRecentOrders() {
     app.request({
-      url: '/order/recent',
+      url: '/orders/recent',
       method: 'GET'
     }).then(res => {
       if (res.code === 200) {

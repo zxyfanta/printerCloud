@@ -8,6 +8,7 @@ import com.printercloud.repository.PrintFileRepository;
 import com.printercloud.repository.PrintOrderRepository;
 import com.printercloud.repository.PriceConfigRepository;
 import com.printercloud.repository.UserRepository;
+import com.printercloud.service.SystemConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -37,6 +38,9 @@ public class DataInitializer implements CommandLineRunner {
     @Autowired
     private PriceConfigRepository priceConfigRepository;
 
+    @Autowired
+    private SystemConfigService systemConfigService;
+
     @Override
     public void run(String... args) throws Exception {
         // 检查是否已有数据
@@ -46,6 +50,7 @@ public class DataInitializer implements CommandLineRunner {
 
         // 创建测试数据
         createDefaultPriceConfigs();
+        createDefaultSystemConfigs();
         createTestUsers();
         createTestFiles();
         createTestOrders();
@@ -81,6 +86,12 @@ public class DataInitializer implements CommandLineRunner {
         priceConfigRepository.save(a3Extra);
 
         System.out.println("默认价格配置创建完成");
+    }
+
+    private void createDefaultSystemConfigs() {
+        // 初始化默认系统配置
+        systemConfigService.initDefaultConfigs();
+        System.out.println("默认系统配置创建完成");
     }
 
     private void createTestUsers() {

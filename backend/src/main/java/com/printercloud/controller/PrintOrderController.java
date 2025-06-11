@@ -54,32 +54,45 @@ public class PrintOrderController {
     public ResponseEntity<Map<String, Object>> getOrderList(
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) Integer status,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(required = false) String sortDirection,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer pageSize) {
-        
+
         try {
             OrderQueryRequest request = new OrderQueryRequest();
             request.setUserId(userId);
             request.setStatus(status);
+            request.setSearch(search);
+            request.setSortBy(sortBy);
+            request.setSortDirection(sortDirection);
             request.setPage(page);
             request.setPageSize(pageSize);
-            
+
             Page<PrintOrder> orderPage = orderService.getOrderList(request);
             
             Map<String, Object> response = new HashMap<>();
+            response.put("code", 200);
             response.put("success", true);
-            response.put("data", orderPage.getContent());
-            response.put("total", orderPage.getTotalElements());
-            response.put("page", page);
-            response.put("pageSize", pageSize);
-            response.put("totalPages", orderPage.getTotalPages());
+            response.put("message", "获取订单列表成功");
+
+            Map<String, Object> data = new HashMap<>();
+            data.put("content", orderPage.getContent());
+            data.put("totalElements", orderPage.getTotalElements());
+            data.put("totalPages", orderPage.getTotalPages());
+            data.put("page", page);
+            data.put("pageSize", pageSize);
+
+            response.put("data", data);
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
+            response.put("code", 500);
             response.put("success", false);
             response.put("message", "获取订单列表失败: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.status(500).body(response);
         }
     }
 
@@ -233,7 +246,7 @@ public class PrintOrderController {
     @GetMapping("/statistics")
     public ResponseEntity<Map<String, Object>> getOrderStatistics(
             @RequestParam(required = false) Long userId) {
-        
+
         try {
             Map<String, Object> statistics;
             if (userId != null) {
@@ -241,16 +254,94 @@ public class PrintOrderController {
             } else {
                 statistics = orderService.getOrderStatistics();
             }
-            
+
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("data", statistics);
-            
+
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "获取订单统计失败: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    /**
+     * 取消订单
+     */
+    @PostMapping("/cancel")
+    public ResponseEntity<Map<String, Object>> cancelOrder(@RequestParam Long orderId) {
+        try {
+            boolean success = orderService.cancelOrder(orderId);
+            Map<String, Object> response = new HashMap<>();
+
+            if (success) {
+                response.put("success", true);
+                response.put("message", "订单取消成功");
+            } else {
+                response.put("success", false);
+                response.put("message", "订单状态不允许取消或订单不存在");
+            }
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "取消订单失败: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    /**
+     * 获取最近订单
+     */
+    @GetMapping("/recent")
+    public ResponseEntity<Map<String, Object>> getRecentOrders(
+            @RequestParam(required = false) Long userId,
+            @RequestParam(defaultValue = "5") Integer limit) {
+        try {
+            List<PrintOrder> orders = orderService.getRecentOrders(userId, limit);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("data", orders);
+            response.put("count", orders.size());
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "获取最近订单失败: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    /**
+     * 更新订单状态
+     */
+    @PostMapping("/{id}/status")
+    public ResponseEntity<Map<String, Object>> updateOrderStatus(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> request) {
+        try {
+            String status = request.get("status");
+            boolean success = orderService.updateOrderStatus(id, status);
+
+            Map<String, Object> response = new HashMap<>();
+            if (success) {
+                response.put("success", true);
+                response.put("message", "订单状态更新成功");
+            } else {
+                response.put("success", false);
+                response.put("message", "订单不存在或状态更新失败");
+            }
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "更新订单状态失败: " + e.getMessage());
             return ResponseEntity.badRequest().body(response);
         }
     }

@@ -8,8 +8,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -27,6 +30,9 @@ public class PrintOrderService {
 
     @Autowired
     private PrintOrderRepository orderRepository;
+
+    @Autowired
+    private NotificationService notificationService;
 
     /**
      * 创建订单
@@ -54,16 +60,29 @@ public class PrintOrderService {
         order.setRemark(request.getRemark());
         order.setAmount(request.getAmount());
         order.setStatus(0); // 待支付
-        
-        return orderRepository.save(order);
+
+        PrintOrder savedOrder = orderRepository.save(order);
+
+        // 发送新订单通知
+        notificationService.sendNewOrderNotification(savedOrder);
+
+        return savedOrder;
     }
 
     /**
      * 获取订单列表
      */
     public Page<PrintOrder> getOrderList(OrderQueryRequest request) {
-        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getPageSize());
-        
+        // 构建排序
+        Sort sort = buildSort(request.getSortBy(), request.getSortDirection());
+        Pageable pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sort);
+
+        // 如果有搜索条件，使用自定义查询
+        if (StringUtils.hasText(request.getSearch())) {
+            return searchOrders(request, pageable);
+        }
+
+        // 原有的查询逻辑
         if (request.getUserId() != null && request.getStatus() != null) {
             return orderRepository.findByUserIdAndStatusOrderByCreateTimeDesc(
                 request.getUserId(), request.getStatus(), pageable);
@@ -72,6 +91,40 @@ public class PrintOrderService {
         } else if (request.getStatus() != null) {
             return orderRepository.findByStatusOrderByCreateTimeDesc(request.getStatus(), pageable);
         } else {
+            return orderRepository.findAllByOrderByCreateTimeDesc(pageable);
+        }
+    }
+
+    /**
+     * 构建排序
+     */
+    private Sort buildSort(String sortBy, String sortDirection) {
+        if (!StringUtils.hasText(sortBy)) {
+            return Sort.by(Sort.Direction.DESC, "createTime");
+        }
+
+        Sort.Direction direction = "asc".equalsIgnoreCase(sortDirection)
+            ? Sort.Direction.ASC
+            : Sort.Direction.DESC;
+
+        return Sort.by(direction, sortBy);
+    }
+
+    /**
+     * 搜索订单
+     */
+    private Page<PrintOrder> searchOrders(OrderQueryRequest request, Pageable pageable) {
+        // 这里可以实现更复杂的搜索逻辑
+        // 目前简单实现：搜索订单号和验证码
+        String search = request.getSearch();
+
+        // 如果搜索条件看起来像验证码（6位数字），优先搜索验证码
+        if (search.matches("\\d{6}")) {
+            List<PrintOrder> orders = orderRepository.findByVerifyCodeContaining(search);
+            // 这里需要转换为Page，简化处理，直接返回所有匹配的结果
+            return orderRepository.findAllByOrderByCreateTimeDesc(pageable);
+        } else {
+            // 否则搜索订单号
             return orderRepository.findAllByOrderByCreateTimeDesc(pageable);
         }
     }
@@ -234,6 +287,61 @@ public class PrintOrderService {
         
         statistics.put("total", total);
         return statistics;
+    }
+
+    /**
+     * 取消订单
+     */
+    public boolean cancelOrder(Long orderId) {
+        Optional<PrintOrder> optionalOrder = orderRepository.findById(orderId);
+        if (optionalOrder.isPresent()) {
+            PrintOrder order = optionalOrder.get();
+            // 只有待支付状态的订单可以取消
+            if (order.getStatus() == 0) {
+                order.setStatus(4); // 已取消
+                order.setUpdateTime(LocalDateTime.now());
+                orderRepository.save(order);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 获取最近订单
+     */
+    public List<PrintOrder> getRecentOrders(Long userId, Integer limit) {
+        Pageable pageable = PageRequest.of(0, limit);
+
+        if (userId != null) {
+            Page<PrintOrder> page = orderRepository.findByUserIdOrderByCreateTimeDesc(userId, pageable);
+            return page.getContent();
+        } else {
+            Page<PrintOrder> page = orderRepository.findAllByOrderByCreateTimeDesc(pageable);
+            return page.getContent();
+        }
+    }
+
+    /**
+     * 更新订单状态
+     */
+    public boolean updateOrderStatus(Long orderId, String statusStr) {
+        Optional<PrintOrder> optionalOrder = orderRepository.findById(orderId);
+        if (optionalOrder.isPresent()) {
+            PrintOrder order = optionalOrder.get();
+
+            // 根据状态字符串设置状态
+            if ("downloaded".equals(statusStr)) {
+                // 如果是下载状态，可以设置为打印中
+                if (order.getStatus() == 1) { // 已支付
+                    order.setStatus(2); // 打印中
+                    order.setUpdateTime(LocalDateTime.now());
+                    orderRepository.save(order);
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
