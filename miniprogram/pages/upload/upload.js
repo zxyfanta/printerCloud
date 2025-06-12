@@ -112,6 +112,9 @@ Page({
 
         // 生成本地预览
         this.generateLocalPreview(fileInfo);
+
+        // 立即上传文件到服务器
+        this.uploadFileToServer(fileInfo);
       },
       fail: (err) => {
         console.error('获取文件信息失败：', err);
@@ -159,11 +162,93 @@ Page({
   },
 
   /**
+   * 上传文件到服务器
+   */
+  uploadFileToServer(fileInfo) {
+    // 检查登录状态
+    if (!app.globalData.isLogin) {
+      app.showError('请先登录');
+      return;
+    }
+
+    this.setData({
+      uploading: true,
+      uploadProgress: 0
+    });
+
+    const uploadTask = wx.uploadFile({
+      url: app.globalData.baseUrl + '/file/upload',
+      filePath: fileInfo.path,
+      name: 'file',
+      header: {
+        'Authorization': app.globalData.token ? `Bearer ${app.globalData.token}` : ''
+      },
+      success: (res) => {
+        if (res.statusCode === 200) {
+          const data = JSON.parse(res.data);
+          if (data.code === 200) {
+            // 上传成功，更新文件信息
+            const updatedFileInfo = {
+              ...fileInfo,
+              uploaded: true,
+              serverId: data.data.id,
+              serverData: data.data
+            };
+
+            this.setData({
+              fileInfo: updatedFileInfo,
+              uploading: false,
+              uploadProgress: 100
+            });
+
+            app.showSuccess('文件上传成功');
+
+            // 存储到全局数据
+            app.globalData.tempFileInfo = updatedFileInfo;
+
+          } else {
+            this.handleUploadError(data.message || '上传失败');
+          }
+        } else {
+          this.handleUploadError(`上传失败：${res.statusCode}`);
+        }
+      },
+      fail: (err) => {
+        console.error('文件上传失败：', err);
+        this.handleUploadError('上传失败：' + (err.errMsg || '网络错误'));
+      }
+    });
+
+    // 监听上传进度
+    uploadTask.onProgressUpdate((res) => {
+      this.setData({
+        uploadProgress: res.progress
+      });
+    });
+  },
+
+  /**
+   * 处理上传错误
+   */
+  handleUploadError(message) {
+    this.setData({
+      uploading: false,
+      uploadProgress: 0
+    });
+    app.showError(message);
+  },
+
+  /**
    * 跳转到预览页面
    */
   goToPreview() {
     if (!this.data.fileInfo) {
       app.showError('请先选择文件');
+      return;
+    }
+
+    if (!this.data.fileInfo.uploaded) {
+      app.showError('文件还在上传中，请稍候');
       return;
     }
 

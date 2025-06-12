@@ -49,6 +49,9 @@ public class PrintFile {
     @Column(name = "status")
     private Integer status; // 0-上传中，1-上传成功，2-解析中，3-解析成功，4-解析失败
 
+    @Column(name = "parse_error")
+    private String parseError; // 解析错误信息
+
     @Column(name = "create_time")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
@@ -179,6 +182,14 @@ public class PrintFile {
 
     public void setDeleted(Boolean deleted) {
         this.deleted = deleted;
+    }
+
+    public String getParseError() {
+        return parseError;
+    }
+
+    public void setParseError(String parseError) {
+        this.parseError = parseError;
     }
 
     @PreUpdate

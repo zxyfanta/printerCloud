@@ -38,7 +38,7 @@ Page({
   },
 
   /**
-   * 加载本地文件信息
+   * 加载文件信息
    */
   loadLocalFileInfo() {
     const tempFileInfo = app.globalData.tempFileInfo;
@@ -48,28 +48,143 @@ Page({
       return;
     }
 
-    // 估算页数（图片文件为1页，其他文件根据大小估算）
-    let estimatedPages = 1;
-    if (tempFileInfo.type === 'image') {
-      estimatedPages = 1;
+    if (tempFileInfo.uploaded && tempFileInfo.serverId) {
+      // 从服务器获取文件信息
+      this.loadServerFileInfo(tempFileInfo.serverId);
     } else {
-      // 根据文件大小估算页数（每页约50KB）
-      estimatedPages = Math.max(1, Math.ceil(tempFileInfo.size / (50 * 1024)));
+      // 使用本地估算信息
+      this.loadLocalEstimatedInfo(tempFileInfo);
     }
+  },
+
+  /**
+   * 从服务器加载文件信息
+   */
+  loadServerFileInfo(fileId) {
+    app.showLoading('获取文件信息...');
+
+    app.request({
+      url: `/file/${fileId}`,
+      method: 'GET'
+    }).then(res => {
+      app.hideLoading();
+
+      if (res.code === 200) {
+        const serverFileInfo = res.data;
+        const fileInfo = {
+          id: serverFileInfo.id,
+          name: serverFileInfo.originalName,
+          pageCount: serverFileInfo.pageCount || this.estimatePagesBySize(serverFileInfo.fileSize),
+          icon: this.getFileIcon(serverFileInfo.originalName),
+          size: this.formatFileSize(serverFileInfo.fileSize),
+          status: serverFileInfo.status,
+          parseError: serverFileInfo.parseError,
+          isServerFile: true
+        };
+
+        this.setData({
+          fileInfo: fileInfo,
+          calculatedPages: fileInfo.pageCount
+        });
+
+        this.calculatePrice();
+        this.checkCanCreateOrder();
+
+        // 如果文件还在解析中，定时查询状态
+        if (serverFileInfo.status === 2) {
+          this.startPollingFileStatus(fileId);
+        }
+
+      } else {
+        app.showError(res.message || '获取文件信息失败');
+        this.loadLocalEstimatedInfo(app.globalData.tempFileInfo);
+      }
+    }).catch(err => {
+      app.hideLoading();
+      console.error('获取文件信息失败：', err);
+      app.showError('获取文件信息失败');
+      this.loadLocalEstimatedInfo(app.globalData.tempFileInfo);
+    });
+  },
+
+  /**
+   * 加载本地估算信息
+   */
+  loadLocalEstimatedInfo(tempFileInfo) {
+    const estimatedPages = this.estimatePagesBySize(tempFileInfo.size);
 
     this.setData({
       fileInfo: {
         name: tempFileInfo.name,
         pageCount: estimatedPages,
-        icon: this.getFileIcon(tempFileInfo.type),
+        icon: this.getFileIcon(tempFileInfo.name),
         size: this.formatFileSize(tempFileInfo.size),
-        localPath: tempFileInfo.path
+        localPath: tempFileInfo.path,
+        isServerFile: false
       },
       calculatedPages: estimatedPages
     });
 
     this.calculatePrice();
     this.checkCanCreateOrder();
+  },
+
+  /**
+   * 根据文件大小估算页数
+   */
+  estimatePagesBySize(fileSize) {
+    if (!fileSize) return 1;
+
+    // 根据文件大小估算页数（每页约50KB）
+    return Math.max(1, Math.ceil(fileSize / (50 * 1024)));
+  },
+
+  /**
+   * 定时查询文件解析状态
+   */
+  startPollingFileStatus(fileId) {
+    const pollInterval = setInterval(() => {
+      app.request({
+        url: `/file/${fileId}`,
+        method: 'GET'
+      }).then(res => {
+        if (res.code === 200) {
+          const serverFileInfo = res.data;
+
+          if (serverFileInfo.status === 3) {
+            // 解析成功，更新页数
+            clearInterval(pollInterval);
+
+            this.setData({
+              'fileInfo.pageCount': serverFileInfo.pageCount,
+              'fileInfo.status': 3,
+              calculatedPages: serverFileInfo.pageCount
+            });
+
+            this.calculatePrice();
+            app.showSuccess('文件解析完成');
+
+          } else if (serverFileInfo.status === 4) {
+            // 解析失败
+            clearInterval(pollInterval);
+
+            this.setData({
+              'fileInfo.status': 4,
+              'fileInfo.parseError': serverFileInfo.parseError
+            });
+
+            app.showError('文件解析失败，使用估算页数');
+          }
+        }
+      }).catch(err => {
+        console.error('查询文件状态失败：', err);
+      });
+    }, 3000); // 每3秒查询一次
+
+    // 30秒后停止查询
+    setTimeout(() => {
+      clearInterval(pollInterval);
+    }, 30000);
   },
 
 

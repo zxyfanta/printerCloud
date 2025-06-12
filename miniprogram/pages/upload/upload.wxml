@@ -68,7 +68,21 @@
       <view class="preview-card">
         <view class="preview-header">
           <text class="preview-title">文件预览</text>
-          <text class="preview-subtitle">确认文件内容后进行打印配置</text>
+          <text class="preview-subtitle">{{uploading ? '正在上传到服务器...' : (fileInfo.uploaded ? '文件已上传，可进行配置' : '确认文件内容后进行打印配置')}}</text>
+        </view>
+
+        <!-- 上传进度 -->
+        <view class="upload-progress" wx:if="{{uploading}}">
+          <view class="progress-bar">
+            <view class="progress-fill" style="width: {{uploadProgress}}%"></view>
+          </view>
+          <text class="progress-text">上传进度：{{uploadProgress}}%</text>
+        </view>
+
+        <!-- 上传状态 -->
+        <view class="upload-status" wx:if="{{fileInfo.uploaded && !uploading}}">
+          <text class="status-icon">✅</text>
+          <text class="status-text">文件已成功上传到服务器</text>
         </view>
 
         <!-- 图片预览 -->
@@ -97,7 +111,7 @@
           </view>
           <view class="tip-item">
             <text class="tip-icon">🔒</text>
-            <text class="tip-text">确认订单并付费后才会上传到服务器</text>
+            <text class="tip-text">文件已安全上传，服务器将自动解析页数信息</text>
           </view>
         </view>
       </view>

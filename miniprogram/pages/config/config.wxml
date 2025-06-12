@@ -10,7 +10,11 @@
         </view>
         <view class="file-details">
           <text class="file-name">{{fileInfo.name}}</text>
-          <text class="file-desc">{{fileInfo.size}} · {{fileInfo.pageCount}}页</text>
+          <text class="file-desc">{{fileInfo.size}}</text>
+          <text class="file-pages" wx:if="{{fileInfo.status === 3}}">共 {{fileInfo.pageCount}} 页 ✅</text>
+          <text class="file-pages parsing" wx:elif="{{fileInfo.status === 2}}">正在解析页数... ⏳</text>
+          <text class="file-pages error" wx:elif="{{fileInfo.status === 4}}">解析失败，预计 {{fileInfo.pageCount}} 页 ❌</text>
+          <text class="file-pages" wx:else>预计 {{fileInfo.pageCount}} 页</text>
         </view>
       </view>
     </view>

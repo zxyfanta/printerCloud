@@ -36,6 +36,9 @@ public class FileService {
     @Autowired
     private PrintFileRepository fileRepository;
 
+    @Autowired
+    private FileParseService fileParseService;
+
     @Value("${file.upload.path}")
     private String uploadPath;
 
@@ -78,8 +81,14 @@ public class FileService {
         printFile.setFileType(file.getContentType());
         printFile.setFileMd5(fileMd5);
         printFile.setStatus(1); // 上传成功
-        
-        return fileRepository.save(printFile);
+
+        // 保存文件记录
+        PrintFile savedFile = fileRepository.save(printFile);
+
+        // 异步解析文件信息（页数等）
+        fileParseService.parseFileAsync(savedFile.getId());
+
+        return savedFile;
     }
 
     /**
