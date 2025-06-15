@@ -60,7 +60,8 @@ public class AuthController {
                     User user = userService.getUserByUsername(request.getUsername());
                     response.put("code", 200);
                     response.put("message", "登录成功");
-                    response.put("data", new LoginResponse(token, user));
+                    response.put("token", token);
+                    response.put("userInfo", user);
                     return ResponseEntity.ok(response);
                 } else {
                     response.put("code", 401);
@@ -74,7 +75,8 @@ public class AuthController {
                     String token = jwtUtil.generateToken(user.getId(), user.getUsername() != null ? user.getUsername() : user.getOpenId(), user.getRole());
                     response.put("code", 200);
                     response.put("message", "登录成功");
-                    response.put("data", new LoginResponse(token, user));
+                    response.put("token", token);
+                    response.put("userInfo", user);
                     return ResponseEntity.ok(response);
                 } else {
                     response.put("code", 401);

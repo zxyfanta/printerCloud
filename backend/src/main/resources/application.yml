@@ -54,9 +54,6 @@ wechat:
     secret: ${WECHAT_SECRET:cbae778f80ba7f3196e0d589cb651f1f}  # 从环境变量获取，默认值为占位符
     code2session-url: https://api.weixin.qq.com/sns/jscode2session
 
-# 环境配置
-app:
-  env: ${APP_ENV:dev}  # dev-开发环境，prod-生产环境
 
 # 日志配置
 logging:

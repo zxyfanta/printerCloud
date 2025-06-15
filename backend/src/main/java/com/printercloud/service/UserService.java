@@ -47,8 +47,7 @@ public class UserService {
     @Autowired
     private WechatConfig wechatConfig;
 
-    @Value("${app.env:dev}")
-    private String appEnv;
+
 
     @Value("${admin.default.username}")
     private String defaultAdminUsername;
@@ -163,17 +162,7 @@ public class UserService {
     private WechatUserInfo getWechatUserInfo(String code) {
         System.out.println("getWechatUserInfo被调用，code: " + code);
         
-        // 开发环境下直接返回模拟数据
-        if (isDevEnvironment()) {
-            System.out.println("当前为开发环境，返回模拟数据");
-            WechatUserInfo mockInfo = new WechatUserInfo();
-            mockInfo.setOpenId("mock_openid_" + code);
-            mockInfo.setNickname("微信用户_" + code.substring(0, Math.min(6, code.length())));
-            mockInfo.setAvatarUrl("https://thirdwx.qlogo.cn/mmopen/vi_32/default_avatar.png");
-            return mockInfo;
-        }
-        
-        // 生产环境下调用真实的微信API
+        // 调用真实的微信API
         try {
             // 检查微信配置
             if ("your_wechat_appid".equals(wechatConfig.getAppid()) || 
@@ -235,12 +224,7 @@ public class UserService {
     
 
     
-    /**
-     * 检查是否为开发环境
-     */
-    private boolean isDevEnvironment() {
-        return "dev".equals(appEnv);
-    }
+
     
     /**
      * 微信用户信息内部类

@@ -152,6 +152,7 @@ App({
    * 微信登录
    */
   wxLogin() {
+    const self = this;
     return new Promise((resolve, reject) => {
       wx.login({
         success: (res) => {
@@ -161,7 +162,7 @@ App({
               code: res.code,
               loginType: 'WECHAT'
             });
-            this.request({
+            self.request({
               url: '/auth/login',
               method: 'POST',
               data: {
@@ -170,21 +171,34 @@ App({
               }
             }).then(result => {
               console.log('后端登录响应：', result);
+              console.log('result.token:', result.token);
+              console.log('result.userInfo:', result.userInfo);
               if (result.code === 200) {
-                this.globalData.token = result.data.token;
-                this.globalData.userInfo = result.data.userInfo;
-                this.globalData.isLogin = true;
+                // 直接从result获取数据，不使用result.data
+                const token = result.token;
+                const userInfo = result.userInfo;
                 
-                // 保存到本地存储
-                wx.setStorageSync('token', result.data.token);
-                wx.setStorageSync('userInfo', result.data.userInfo);
-                
-                console.log('登录成功，用户信息：', result.data.userInfo);
-                resolve(result.data);
+                if (token && userInfo) {
+                  self.globalData.token = token;
+                  self.globalData.userInfo = userInfo;
+                  self.globalData.isLogin = true;
+                  
+                  // 保存到本地存储
+                  wx.setStorageSync('token', token);
+                  wx.setStorageSync('userInfo', userInfo);
+                  
+                  console.log('登录成功，用户信息：', userInfo);
+                  resolve({token: token, userInfo: userInfo});
+                } else {
+                  reject(new Error('登录响应数据格式错误'));
+                }
               } else {
-                reject(new Error(result.message));
+                reject(new Error(result.message || '登录失败'));
               }
-            }).catch(reject);
+            }).catch(error => {
+              console.error('登录请求失败：', error);
+              reject(error);
+            });
           } else {
             reject(new Error('登录失败：' + res.errMsg));
           }
