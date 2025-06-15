@@ -3,7 +3,6 @@ package com.printercloud.service;
 import com.printercloud.entity.User;
 import com.printercloud.repository.UserRepository;
 import com.printercloud.repository.PrintOrderRepository;
-import com.printercloud.service.PriceConfigService;
 import com.printercloud.util.JwtUtil;
 import com.printercloud.config.WechatConfig;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -259,8 +258,10 @@ public class UserService {
         public void setNickname(String nickname) { this.nickname = nickname; }
         public String getAvatarUrl() { return avatarUrl; }
         public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+        @SuppressWarnings("unused") // 可能被序列化框架使用
         public String getSessionKey() { return sessionKey; }
         public void setSessionKey(String sessionKey) { this.sessionKey = sessionKey; }
+        @SuppressWarnings("unused") // 可能被序列化框架使用
         public String getUnionId() { return unionId; }
         public void setUnionId(String unionId) { this.unionId = unionId; }
     }

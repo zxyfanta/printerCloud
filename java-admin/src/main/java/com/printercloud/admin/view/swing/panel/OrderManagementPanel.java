@@ -218,13 +218,20 @@ public class OrderManagementPanel extends JPanel {
      * 加载数据
      */
     private void loadData() {
+        if (orderService == null) {
+            logger.warn("OrderService未注入，无法加载数据");
+            // 显示模拟数据或空数据
+            showEmptyData();
+            return;
+        }
+
         SwingWorker<Map<String, Object>, Void> worker = new SwingWorker<Map<String, Object>, Void>() {
             @Override
             protected Map<String, Object> doInBackground() throws Exception {
                 String search = searchField.getText().trim();
                 String status = statusFilter.getSelectedItem().toString();
                 Integer statusCode = "全部状态".equals(status) ? null : getStatusCode(status);
-                
+
                 return orderService.getOrders(currentPage, pageSize, search, statusCode, "createTime", "desc");
             }
             
@@ -247,7 +254,19 @@ public class OrderManagementPanel extends JPanel {
         
         worker.execute();
     }
-    
+
+    /**
+     * 显示空数据
+     */
+    private void showEmptyData() {
+        tableModel.setRowCount(0);
+        totalLabel.setText("总计: 0 条记录 (服务未连接)");
+        pageLabel.setText("第 1 页，共 1 页");
+        prevButton.setEnabled(false);
+        nextButton.setEnabled(false);
+        updateButtonStates();
+    }
+
     /**
      * 更新表格数据
      */

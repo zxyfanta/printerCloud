@@ -23,12 +23,6 @@ import java.util.Map;
 @Controller
 public class WebSocketTestController {
 
-    @Autowired
-    private SimpMessagingTemplate messagingTemplate;
-
-    @Autowired
-    private WebSocketNotificationService notificationService;
-
     /**
      * 处理客户端发送的测试消息
      */
