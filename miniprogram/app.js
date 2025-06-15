@@ -172,14 +172,14 @@ App({
               console.log('后端登录响应：', result);
               if (result.code === 200) {
                 this.globalData.token = result.data.token;
-                this.globalData.userInfo = result.data.user;
+                this.globalData.userInfo = result.data.userInfo;
                 this.globalData.isLogin = true;
                 
                 // 保存到本地存储
                 wx.setStorageSync('token', result.data.token);
-                wx.setStorageSync('userInfo', result.data.user);
+                wx.setStorageSync('userInfo', result.data.userInfo);
                 
-                console.log('登录成功，用户信息：', result.data.user);
+                console.log('登录成功，用户信息：', result.data.userInfo);
                 resolve(result.data);
               } else {
                 reject(new Error(result.message));
