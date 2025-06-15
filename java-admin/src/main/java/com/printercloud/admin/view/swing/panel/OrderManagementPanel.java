@@ -5,7 +5,7 @@ import com.printercloud.admin.service.OrderService;
 import net.miginfocom.swing.MigLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -26,7 +26,6 @@ public class OrderManagementPanel extends JPanel {
     
     private static final Logger logger = LoggerFactory.getLogger(OrderManagementPanel.class);
     
-    @Autowired
     private OrderService orderService;
     
     // UI组件
@@ -52,6 +51,15 @@ public class OrderManagementPanel extends JPanel {
         initializeComponents();
         setupLayout();
         setupEventHandlers();
+        // 延迟加载数据，等待服务注入
+    }
+
+    /**
+     * 设置订单服务
+     */
+    public void setOrderService(OrderService orderService) {
+        this.orderService = orderService;
+        // 服务注入后加载数据
         loadData();
     }
     

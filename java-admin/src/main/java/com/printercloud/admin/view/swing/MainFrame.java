@@ -361,19 +361,26 @@ public class MainFrame extends JFrame {
     private void createViewPanels() {
         // 仪表盘
         viewPanels.put("dashboard", new DashboardPanel());
-        
-        // 订单管理
-        viewPanels.put("orders", new OrderManagementPanel());
-        
+
+        // 订单管理 - 需要传入服务依赖
+        OrderManagementPanel orderPanel = new OrderManagementPanel();
+        // 通过Spring上下文获取OrderService
+        try {
+            orderPanel.setOrderService(app.getApplicationContext().getBean(com.printercloud.admin.service.OrderService.class));
+        } catch (Exception e) {
+            logger.warn("无法获取OrderService，订单管理功能可能受限", e);
+        }
+        viewPanels.put("orders", orderPanel);
+
         // 文件管理
         viewPanels.put("files", new FileManagementPanel());
-        
+
         // 用户管理
         viewPanels.put("users", new UserManagementPanel());
-        
+
         // 打印机管理
         viewPanels.put("printers", new PrinterManagementPanel());
-        
+
         // 添加到内容面板
         for (Map.Entry<String, JPanel> entry : viewPanels.entrySet()) {
             contentPanel.add(entry.getValue(), entry.getKey());
