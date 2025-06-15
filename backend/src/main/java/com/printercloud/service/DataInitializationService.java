@@ -33,8 +33,9 @@ public class DataInitializationService {
 
     /**
      * 初始化示例数据
+     * 注释掉 @PostConstruct 以避免与 DataInitializer 冲突
      */
-    @PostConstruct
+    // @PostConstruct
     public void initSampleData() {
         try {
             // 检查是否已有数据，如果有则不初始化

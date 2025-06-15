@@ -30,7 +30,7 @@ spring:
 
 # JWT配置
 jwt:
-  secret: printerCloudSecretKey2024
+  secret: printerCloudSuperSecretKey2024_abcdefghijklmnopqrstuvwxyz123456
   expiration: 86400000  # 24小时
 
 # 管理员配置

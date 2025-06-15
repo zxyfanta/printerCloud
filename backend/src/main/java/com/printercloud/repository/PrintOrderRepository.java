@@ -74,7 +74,7 @@ public interface PrintOrderRepository extends JpaRepository<PrintOrder, Long> {
     /**
      * 查找今日订单
      */
-    @Query("SELECT o FROM PrintOrder o WHERE DATE(o.createTime) = CURRENT_DATE ORDER BY o.createTime DESC")
+    @Query("SELECT o FROM PrintOrder o WHERE FUNCTION('date', o.createTime) = CURRENT_DATE ORDER BY o.createTime DESC")
     List<PrintOrder> findTodayOrders();
 
     /**
