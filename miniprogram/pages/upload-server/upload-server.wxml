@@ -10,8 +10,9 @@
     <!-- 上传状态 -->
     <view class="upload-status-card">
       <view class="status-icon-wrapper">
-        <view class="status-icon {{uploadSuccess ? 'success' : (uploading ? 'uploading' : 'waiting')}}">
+        <view class="status-icon {{uploadSuccess ? 'success' : (uploadError ? 'error' : (uploading ? 'uploading' : 'waiting'))}}">
           <text class="icon-text" wx:if="{{uploadSuccess}}">✓</text>
+          <text class="icon-text" wx:elif="{{uploadError}}">✗</text>
           <text class="icon-text" wx:elif="{{uploading}}">📤</text>
           <text class="icon-text" wx:else>⏳</text>
         </view>
@@ -19,10 +20,12 @@
       
       <view class="status-content">
         <text class="status-title" wx:if="{{uploadSuccess}}">上传完成</text>
+        <text class="status-title" wx:elif="{{uploadError}}">上传失败</text>
         <text class="status-title" wx:elif="{{uploading}}">正在上传</text>
         <text class="status-title" wx:else>准备上传</text>
         
         <text class="status-desc" wx:if="{{uploadSuccess}}">文件已成功上传，订单已提交处理</text>
+        <text class="status-desc" wx:elif="{{uploadError}}">{{errorMessage || '上传过程中出现错误，请重试'}}</text>
         <text class="status-desc" wx:elif="{{uploading}}">请保持网络连接，正在上传文件到服务器</text>
         <text class="status-desc" wx:else>即将开始上传文件</text>
       </view>
@@ -45,6 +48,15 @@
       </view>
     </view>
 
+    <!-- 开发环境提示 -->
+    <view class="dev-mode-card" wx:if="{{useSimulatedUpload}}">
+      <view class="dev-mode-icon">🔧</view>
+      <view class="dev-mode-content">
+        <text class="dev-mode-title">开发模式</text>
+        <text class="dev-mode-desc">当前使用模拟上传，文件不会真正上传到服务器</text>
+      </view>
+    </view>
+
     <!-- 上传进度 -->
     <view class="progress-card" wx:if="{{uploading}}">
       <view class="card-header">
@@ -58,6 +70,30 @@
       
       <view class="progress-tips">
         <text class="tip-text">上传过程中请勿关闭页面</text>
+      </view>
+    </view>
+
+    <!-- 错误状态 -->
+    <view class="error-card" wx:if="{{uploadError}}">
+      <view class="error-content">
+        <view class="error-icon">❌</view>
+        <text class="error-title">上传失败</text>
+        <text class="error-desc">{{errorMessage || '文件上传过程中出现错误'}}</text>
+        
+        <view class="error-tips">
+          <view class="tip-item">
+            <text class="tip-dot">•</text>
+            <text class="tip-text">请检查网络连接是否稳定</text>
+          </view>
+          <view class="tip-item">
+            <text class="tip-dot">•</text>
+            <text class="tip-text">文件大小不应超过50MB</text>
+          </view>
+          <view class="tip-item">
+            <text class="tip-dot">•</text>
+            <text class="tip-text">如果问题持续，请联系客服</text>
+          </view>
+        </view>
       </view>
     </view>
 
@@ -109,6 +145,16 @@
       </button>
       <button class="btn primary" bindtap="viewOrder">
         <text class="btn-text">查看订单</text>
+      </button>
+    </view>
+
+    <!-- 错误时的操作按钮 -->
+    <view class="action-buttons" wx:if="{{uploadError}}">
+      <button class="btn secondary" bindtap="goHome">
+        <text class="btn-text">返回首页</text>
+      </button>
+      <button class="btn primary" bindtap="retryUpload">
+        <text class="btn-text">重试上传</text>
       </button>
     </view>
   </view>

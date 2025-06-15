@@ -12,21 +12,34 @@ Page({
 
   onLoad() {
     console.log('个人中心页面加载');
+    this.checkLoginAndLoadProfile();
   },
 
   onShow() {
     console.log('个人中心页面显示');
-    this.loadUserInfo();
-    if (app.globalData.isLogin) {
-      this.loadOrderStats();
+    this.checkLoginAndLoadProfile();
+  },
+
+  /**
+   * 检查登录状态并加载个人信息
+   */
+  checkLoginAndLoadProfile() {
+    if (!app.globalData.isLogin || !app.globalData.userInfo) {
+      this.setData({
+        userInfo: null
+      });
+      return;
     }
+    
+    this.loadUserInfo();
+    this.loadOrderStats();
   },
 
   /**
    * 加载用户信息
    */
   loadUserInfo() {
-    if (app.globalData.isLogin) {
+    if (app.globalData.isLogin && app.globalData.userInfo) {
       this.setData({
         userInfo: app.globalData.userInfo
       });
@@ -56,16 +69,11 @@ Page({
   },
 
   /**
-   * 登录
+   * 跳转到登录页面
    */
   login() {
-    app.wxLogin().then(() => {
-      this.loadUserInfo();
-      this.loadOrderStats();
-      app.showSuccess('登录成功');
-    }).catch(err => {
-      console.error('登录失败：', err);
-      app.showError('登录失败');
+    wx.navigateTo({
+      url: '/pages/login/login'
     });
   },
 

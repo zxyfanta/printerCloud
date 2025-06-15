@@ -1,0 +1,318 @@
+/* payment.wxss */
+
+/* 页面容器 */
+.page {
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  padding-bottom: 30rpx;
+}
+
+/* 内容区域 */
+.content {
+  padding: 30rpx;
+}
+
+/* 卡片样式 */
+.card {
+  background-color: #fff;
+  border-radius: 12rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+/* 标题样式 */
+.section-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+/* 订单信息 */
+.order-section {
+  margin-bottom: 30rpx;
+}
+
+.order-info {
+  font-size: 28rpx;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 15rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.info-item:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  color: #666;
+}
+
+.info-value {
+  color: #333;
+  font-weight: 500;
+  max-width: 70%;
+  text-align: right;
+  word-break: break-all;
+}
+
+/* 支付金额 */
+.amount-section {
+  margin-bottom: 30rpx;
+}
+
+.amount-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 0;
+}
+
+.amount-label {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.amount-value {
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #1e3c72;
+}
+
+/* 支付方式 */
+.payment-section {
+  margin-bottom: 30rpx;
+}
+
+.payment-methods {
+  margin-top: 20rpx;
+}
+
+.payment-method {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.payment-method.active {
+  background-color: #f9fbff;
+}
+
+.method-icon {
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+  font-size: 36rpx;
+}
+
+.method-info {
+  flex: 1;
+}
+
+.method-name {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #333;
+  display: block;
+  margin-bottom: 6rpx;
+}
+
+.method-desc {
+  font-size: 24rpx;
+  color: #666;
+  display: block;
+}
+
+.method-check {
+  width: 40rpx;
+  height: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1e3c72;
+  font-weight: bold;
+}
+
+/* 开发模式提示样式 */
+.dev-mode-tip {
+  margin-top: 20rpx;
+  padding: 10rpx 20rpx;
+  background-color: #fff8e1;
+  border-radius: 8rpx;
+  font-size: 24rpx;
+  color: #ff9800;
+  text-align: center;
+  border: 1rpx dashed #ffcc80;
+}
+
+/* 验证码 */
+.verify-section {
+  margin-bottom: 30rpx;
+  text-align: center;
+}
+
+.verify-display {
+  padding: 20rpx 0;
+}
+
+.verify-code {
+  font-size: 60rpx;
+  font-weight: 600;
+  color: #1e3c72;
+  letter-spacing: 10rpx;
+  display: block;
+  margin-bottom: 10rpx;
+}
+
+.verify-tip {
+  font-size: 24rpx;
+  color: #666;
+}
+
+/* 支付按钮 */
+.pay-button-section {
+  margin: 40rpx 0;
+}
+
+.pay-button {
+  background-color: #1e3c72;
+  color: #fff;
+  font-size: 32rpx;
+  font-weight: 500;
+  padding: 20rpx 0;
+  border-radius: 8rpx;
+  text-align: center;
+  width: 100%;
+}
+
+.pay-button[disabled] {
+  background-color: #ccc;
+  color: #fff;
+}
+
+/* 支付说明 */
+.payment-tips {
+  margin-top: 30rpx;
+}
+
+.tips-title {
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 10rpx;
+}
+
+.tips-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.tip-item {
+  font-size: 26rpx;
+  color: #999;
+  margin-bottom: 8rpx;
+  line-height: 1.5;
+}
+
+/* 支付结果弹窗 */
+.payment-result-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  width: 80%;
+  background-color: #fff;
+  border-radius: 12rpx;
+  padding: 40rpx 30rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
+}
+
+.result-icon {
+  text-align: center;
+  font-size: 80rpx;
+  margin-bottom: 20rpx;
+}
+
+.result-title {
+  text-align: center;
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+.result-message {
+  text-align: center;
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 30rpx;
+  line-height: 1.5;
+}
+
+.result-verify {
+  text-align: center;
+  margin: 30rpx 0;
+  padding: 20rpx;
+  background-color: #f5f7fa;
+  border-radius: 8rpx;
+}
+
+.verify-label {
+  font-size: 26rpx;
+  color: #666;
+  display: block;
+  margin-bottom: 10rpx;
+}
+
+.verify-code-large {
+  font-size: 60rpx;
+  font-weight: 600;
+  color: #1e3c72;
+  letter-spacing: 10rpx;
+}
+
+.result-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30rpx;
+}
+
+.btn-primary,
+.btn-secondary {
+  flex: 1;
+  padding: 20rpx 0;
+  border-radius: 8rpx;
+  text-align: center;
+  font-size: 28rpx;
+  font-weight: 500;
+  margin: 0 10rpx;
+}
+
+.btn-primary {
+  background-color: #1e3c72;
+  color: #fff;
+}
+
+.btn-secondary {
+  background-color: #f5f7fa;
+  color: #666;
+  border: 1rpx solid #ddd;
+}

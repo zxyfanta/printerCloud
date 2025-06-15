@@ -154,6 +154,33 @@ Page({
   },
 
   /**
+   * 开始打印 - 检查登录状态
+   */
+  startPrint() {
+    // 检查登录状态
+    if (!app.globalData.isLogin || !app.globalData.userInfo) {
+      wx.navigateTo({
+        url: '/pages/login/login'
+      });
+      return;
+    }
+    
+    // 已登录，直接跳转到上传页面
+    this.goToUpload();
+  },
+
+  /**
+   * 显示登录提示弹窗
+   */
+  showLoginModal() {
+    wx.navigateTo({
+      url: '/pages/login/login'
+    });
+  },
+
+
+
+  /**
    * 跳转到订单页面
    */
   goToOrders() {

@@ -18,13 +18,30 @@ Page({
 
   onLoad() {
     console.log('订单页面加载');
+    this.checkLoginAndLoadOrders();
   },
 
   onShow() {
     console.log('订单页面显示');
-    this.loadOrderList(true);
-    this.loadUserStats();
+    // 刷新订单列表
+    this.checkLoginAndLoadOrders();
   },
+
+  /**
+   * 检查登录状态并加载订单
+   */
+  checkLoginAndLoadOrders() {
+    if (!app.globalData.isLogin || !app.globalData.userInfo) {
+      wx.navigateTo({
+        url: '/pages/login/login'
+      });
+      return;
+    }
+    
+    this.loadOrders();
+  },
+
+
 
   /**
    * 加载订单列表

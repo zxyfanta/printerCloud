@@ -8,7 +8,9 @@ Page({
     paying: false,
     showPaymentResult: false,
     paymentSuccess: false,
-    paymentErrorMsg: ''
+    paymentErrorMsg: '',
+    // 是否使用模拟支付（开发环境使用）
+    useSimulatedPayment: false
   },
 
   onLoad(options) {
@@ -17,10 +19,23 @@ Page({
     if (options.orderId) {
       this.setData({ orderId: options.orderId });
       this.loadOrderInfo();
+      
+      // 根据环境配置决定是否使用模拟支付
+      this.checkPaymentMode();
     } else {
       app.showError('缺少订单信息');
       wx.navigateBack();
     }
+  },
+
+  /**
+   * 检查支付模式
+   */
+  checkPaymentMode() {
+    // 在开发环境中使用模拟支付
+    const useSimulatedPayment = app.globalData.currentEnv === 'dev';
+    this.setData({ useSimulatedPayment });
+    console.log('当前支付模式：', useSimulatedPayment ? '模拟支付' : '实际支付');
   },
 
   /**
@@ -73,6 +88,12 @@ Page({
     
     this.setData({ paying: true });
     
+    // 开发环境使用模拟支付
+    if (this.data.useSimulatedPayment) {
+      this.simulatePayment();
+      return;
+    }
+    
     // 创建支付订单
     app.request({
       url: '/pay/create',
@@ -93,6 +114,50 @@ Page({
       console.error('创建支付订单失败：', err);
       app.showError('创建支付订单失败');
     });
+  },
+
+  /**
+   * 模拟支付（开发环境使用）
+   */
+  simulatePayment() {
+    console.log('使用模拟支付');
+    
+    // 显示加载提示
+    wx.showLoading({
+      title: '模拟支付中...',
+      mask: true
+    });
+    
+    // 延迟2秒模拟支付过程
+    setTimeout(() => {
+      wx.hideLoading();
+      
+      // 生成随机验证码
+      const verifyCode = this.generateVerifyCode();
+      
+      // 更新订单状态
+      this.setData({
+        'orderInfo.status': 1,
+        'orderInfo.verifyCode': verifyCode,
+        showPaymentResult: true,
+        paymentSuccess: true,
+        paying: false
+      });
+      
+      console.log('模拟支付成功，验证码：', verifyCode);
+    }, 2000);
+  },
+
+  /**
+   * 生成随机验证码
+   */
+  generateVerifyCode() {
+    // 生成6位数字验证码
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+      code += Math.floor(Math.random() * 10);
+    }
+    return code;
   },
 
   /**

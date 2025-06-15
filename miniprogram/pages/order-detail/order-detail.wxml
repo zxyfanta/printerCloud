@@ -1,2 +1,178 @@
 <!--pages/order-detail/order-detail.wxml-->
-<text>pages/order-detail/order-detail.wxml</text>
+<view class="page">
+  <!-- 页面标题 -->
+  <view class="page-header">
+    <text class="page-title">订单详情</text>
+  </view>
+
+  <view class="content" wx:if="{{orderInfo}}">
+    <!-- 订单状态 -->
+    <view class="status-section">
+      <view class="status-icon status-{{statusClass}}">
+        <text class="icon-text">{{statusIcon}}</text>
+      </view>
+      <view class="status-info">
+        <text class="status-text">{{statusText}}</text>
+        <text class="status-desc">{{statusDescription}}</text>
+      </view>
+    </view>
+
+    <!-- 订单信息 -->
+    <view class="order-info-card">
+      <view class="card-header">
+        <text class="card-title">订单信息</text>
+      </view>
+      <view class="info-list">
+        <view class="info-item">
+          <text class="info-label">订单编号</text>
+          <text class="info-value">{{orderInfo.orderNo}}</text>
+        </view>
+        <view class="info-item">
+          <text class="info-label">创建时间</text>
+          <text class="info-value">{{orderInfo.createTime}}</text>
+        </view>
+        <view class="info-item" wx:if="{{orderInfo.payTime}}">
+          <text class="info-label">支付时间</text>
+          <text class="info-value">{{orderInfo.payTime}}</text>
+        </view>
+        <view class="info-item" wx:if="{{orderInfo.finishTime}}">
+          <text class="info-label">完成时间</text>
+          <text class="info-value">{{orderInfo.finishTime}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 文件信息 -->
+    <view class="file-info-card">
+      <view class="card-header">
+        <text class="card-title">文件信息</text>
+      </view>
+      <view class="file-section">
+        <view class="file-icon">
+          <text>{{fileIcon}}</text>
+        </view>
+        <view class="file-info">
+          <text class="file-name">{{orderInfo.fileName}}</text>
+          <text class="file-desc">
+            {{orderInfo.copies}}份 · {{orderInfo.actualPages}}页 · 
+            {{orderInfo.isColor ? '彩色' : '黑白'}} · 
+            {{orderInfo.isDoubleSide ? '双面' : '单面'}} · 
+            {{orderInfo.paperSize}}
+          </text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 打印配置 -->
+    <view class="print-config-card">
+      <view class="card-header">
+        <text class="card-title">打印配置</text>
+      </view>
+      <view class="config-list">
+        <view class="config-item">
+          <text class="config-label">打印份数</text>
+          <text class="config-value">{{orderInfo.copies}}份</text>
+        </view>
+        <view class="config-item">
+          <text class="config-label">打印页数</text>
+          <text class="config-value">{{orderInfo.actualPages}}页</text>
+        </view>
+        <view class="config-item">
+          <text class="config-label">打印颜色</text>
+          <text class="config-value">{{orderInfo.isColor ? '彩色' : '黑白'}}</text>
+        </view>
+        <view class="config-item">
+          <text class="config-label">单双面</text>
+          <text class="config-value">{{orderInfo.isDoubleSide ? '双面' : '单面'}}</text>
+        </view>
+        <view class="config-item">
+          <text class="config-label">纸张大小</text>
+          <text class="config-value">{{orderInfo.paperSize}}</text>
+        </view>
+        <view class="config-item" wx:if="{{orderInfo.pageRange}}">
+          <text class="config-label">页面范围</text>
+          <text class="config-value">{{orderInfo.pageRange}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 取件信息 -->
+    <view class="pickup-card" wx:if="{{orderInfo.status >= 1}}">
+      <view class="card-header">
+        <text class="card-title">取件信息</text>
+      </view>
+      <view class="verify-section">
+        <view class="verify-code-display">
+          <text class="verify-code">{{orderInfo.verifyCode}}</text>
+        </view>
+        <view class="verify-tip">
+          <text>请凭此验证码到打印店取件</text>
+        </view>
+      </view>
+      <view class="pickup-info" wx:if="{{orderInfo.pickupInfo}}">
+        <text class="pickup-address">取件地点：{{orderInfo.pickupInfo.address}}</text>
+        <text class="pickup-time">营业时间：{{orderInfo.pickupInfo.businessHours}}</text>
+        <text class="pickup-contact">联系电话：{{orderInfo.pickupInfo.phone}}</text>
+      </view>
+    </view>
+
+    <!-- 费用信息 -->
+    <view class="payment-card">
+      <view class="card-header">
+        <text class="card-title">费用信息</text>
+      </view>
+      <view class="payment-list">
+        <view class="payment-item">
+          <text class="payment-label">打印费用</text>
+          <text class="payment-value">¥{{orderInfo.printAmount}}</text>
+        </view>
+        <view class="payment-item" wx:if="{{orderInfo.discountAmount > 0}}">
+          <text class="payment-label">优惠金额</text>
+          <text class="payment-value discount">-¥{{orderInfo.discountAmount}}</text>
+        </view>
+        <view class="payment-item total">
+          <text class="payment-label">实付金额</text>
+          <text class="payment-value">¥{{orderInfo.totalAmount}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 备注信息 -->
+    <view class="remark-card" wx:if="{{orderInfo.remark}}">
+      <view class="card-header">
+        <text class="card-title">备注信息</text>
+      </view>
+      <view class="remark-content">
+        <text>{{orderInfo.remark}}</text>
+      </view>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="action-buttons">
+      <!-- 待支付状态 -->
+      <block wx:if="{{orderInfo.status === 0}}">
+        <button class="btn secondary" bindtap="cancelOrder">取消订单</button>
+        <button class="btn primary" bindtap="payOrder">立即支付</button>
+      </block>
+      
+      <!-- 已支付/打印中/已完成状态 -->
+      <block wx:if="{{orderInfo.status >= 1}}">
+        <button class="btn secondary" bindtap="contactService">联系客服</button>
+        <button class="btn primary" bindtap="reorder">再次打印</button>
+      </block>
+    </view>
+  </view>
+
+  <!-- 加载中 -->
+  <view class="loading-section" wx:if="{{loading}}">
+    <view class="loading-icon">⏳</view>
+    <text class="loading-text">加载订单信息...</text>
+  </view>
+
+  <!-- 错误提示 -->
+  <view class="error-section" wx:if="{{hasError}}">
+    <view class="error-icon">❌</view>
+    <text class="error-text">{{errorMessage}}</text>
+    <button class="btn secondary" bindtap="goBack">返回</button>
+  </view>
+</view>

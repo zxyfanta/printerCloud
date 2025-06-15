@@ -1,1 +1,397 @@
-/* pages/upload-server/upload-server.wxss */
+/* upload-server.wxss */
+.page {
+  background-color: #f5f7fa;
+  min-height: 100vh;
+  padding: 30rpx;
+  box-sizing: border-box;
+}
+
+/* 页面标题 */
+.page-header {
+  margin-bottom: 40rpx;
+  text-align: center;
+}
+
+.page-title {
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #333;
+  display: block;
+  margin-bottom: 10rpx;
+}
+
+.page-subtitle {
+  font-size: 28rpx;
+  color: #666;
+  display: block;
+}
+
+/* 内容区域 */
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 30rpx;
+}
+
+/* 卡片通用样式 */
+.upload-status-card,
+.file-info-card,
+.progress-card,
+.success-card,
+.error-card,
+.dev-mode-card {
+  background-color: #fff;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.card-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+/* 上传状态 */
+.upload-status-card {
+  display: flex;
+  align-items: center;
+  gap: 30rpx;
+}
+
+.status-icon-wrapper {
+  flex-shrink: 0;
+}
+
+.status-icon {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 50rpx;
+}
+
+.status-icon.success {
+  background-color: #e6f7e9;
+  color: #28a745;
+}
+
+.status-icon.error {
+  background-color: #feeaea;
+  color: #dc3545;
+}
+
+.status-icon.uploading {
+  background-color: #e6f0ff;
+  color: #1890ff;
+  animation: pulse 1.5s infinite;
+}
+
+.status-icon.waiting {
+  background-color: #f0f0f0;
+  color: #999;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.status-content {
+  flex: 1;
+}
+
+.status-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #333;
+  display: block;
+  margin-bottom: 10rpx;
+}
+
+.status-desc {
+  font-size: 28rpx;
+  color: #666;
+  display: block;
+}
+
+/* 文件信息 */
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.file-icon {
+  width: 80rpx;
+  height: 80rpx;
+  background-color: #f0f0f0;
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40rpx;
+}
+
+.file-details {
+  flex: 1;
+}
+
+.file-name {
+  font-size: 30rpx;
+  font-weight: 500;
+  color: #333;
+  display: block;
+  margin-bottom: 6rpx;
+  word-break: break-all;
+}
+
+.file-size {
+  font-size: 26rpx;
+  color: #999;
+  display: block;
+}
+
+/* 开发模式提示 */
+.dev-mode-card {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  background-color: #fff8e6;
+  border: 1px dashed #ffc107;
+}
+
+.dev-mode-icon {
+  font-size: 40rpx;
+}
+
+.dev-mode-content {
+  flex: 1;
+}
+
+.dev-mode-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #ff9800;
+  display: block;
+  margin-bottom: 6rpx;
+}
+
+.dev-mode-desc {
+  font-size: 26rpx;
+  color: #666;
+  display: block;
+}
+
+/* 上传进度 */
+.progress-text {
+  font-size: 28rpx;
+  color: #1890ff;
+  font-weight: 500;
+}
+
+.progress-bar {
+  height: 16rpx;
+  background-color: #f0f0f0;
+  border-radius: 8rpx;
+  overflow: hidden;
+  margin-bottom: 20rpx;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #1890ff;
+  border-radius: 8rpx;
+  transition: width 0.3s ease;
+}
+
+.progress-tips {
+  text-align: center;
+}
+
+.tip-text {
+  font-size: 26rpx;
+  color: #999;
+}
+
+/* 错误状态 */
+.error-card {
+  border: 1px solid #ffebee;
+  background-color: #fff5f5;
+}
+
+.error-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.error-icon {
+  font-size: 60rpx;
+  color: #dc3545;
+  margin-bottom: 20rpx;
+}
+
+.error-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #dc3545;
+  margin-bottom: 10rpx;
+}
+
+.error-desc {
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 30rpx;
+}
+
+.error-tips {
+  width: 100%;
+  text-align: left;
+  margin-top: 20rpx;
+}
+
+/* 成功状态 */
+.success-card {
+  border: 1px solid #e6f7e9;
+  background-color: #f5fff8;
+}
+
+.success-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.success-icon {
+  font-size: 60rpx;
+  margin-bottom: 20rpx;
+}
+
+.success-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #28a745;
+  margin-bottom: 10rpx;
+}
+
+.success-desc {
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 30rpx;
+}
+
+.success-info {
+  width: 100%;
+  background-color: #fff;
+  border-radius: 12rpx;
+  padding: 20rpx;
+  margin-top: 20rpx;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10rpx;
+}
+
+.info-item:last-child {
+  margin-bottom: 0;
+}
+
+.info-label {
+  font-size: 28rpx;
+  color: #666;
+}
+
+.info-value {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+/* 安全提示 */
+.security-tips {
+  background-color: #fff;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.tip-header {
+  margin-bottom: 20rpx;
+}
+
+.tip-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.tip-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.tip-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10rpx;
+}
+
+.tip-dot {
+  color: #1890ff;
+  font-size: 30rpx;
+  line-height: 1;
+}
+
+/* 操作按钮 */
+.action-buttons {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 20rpx;
+}
+
+.btn {
+  flex: 1;
+  height: 88rpx;
+  border-radius: 44rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30rpx;
+  font-weight: 500;
+}
+
+.btn.primary {
+  background-color: #1890ff;
+  color: #fff;
+}
+
+.btn.secondary {
+  background-color: #f0f0f0;
+  color: #666;
+}
+
+.btn-text {
+  font-size: 30rpx;
+}

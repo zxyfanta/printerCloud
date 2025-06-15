@@ -1,10 +1,12 @@
 package com.printercloud.admin.view.swing;
 
 import com.printercloud.admin.service.AuthService;
+import com.printercloud.admin.service.OrderService;
 import com.printercloud.admin.view.swing.panel.*;
 import net.miginfocom.swing.MigLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.swing.*;
 import java.awt.*;
@@ -366,7 +368,7 @@ public class MainFrame extends JFrame {
         OrderManagementPanel orderPanel = new OrderManagementPanel();
         // 通过Spring上下文获取OrderService
         try {
-            orderPanel.setOrderService(app.getApplicationContext().getBean(com.printercloud.admin.service.OrderService.class));
+            orderPanel.setOrderService(OrderService);
         } catch (Exception e) {
             logger.warn("无法获取OrderService，订单管理功能可能受限", e);
         }

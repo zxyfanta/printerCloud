@@ -1,0 +1,320 @@
+/* pages/order-detail/order-detail.wxss */
+
+/* 页面容器 */
+.page {
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  padding-bottom: 30rpx;
+}
+
+/* 页面标题 */
+.page-header {
+  padding: 30rpx 30rpx 20rpx;
+  background-color: #fff;
+  margin-bottom: 20rpx;
+  border-bottom: 1rpx solid #eee;
+}
+
+.page-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #333;
+  display: block;
+}
+
+/* 内容区域 */
+.content {
+  padding: 0 30rpx;
+}
+
+/* 状态区域 */
+.status-section {
+  background-color: #fff;
+  border-radius: 12rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.status-icon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+  font-size: 40rpx;
+}
+
+.status-pending {
+  background-color: #ffefd5;
+}
+
+.status-paid {
+  background-color: #e6f7ff;
+}
+
+.status-processing {
+  background-color: #e6f7ff;
+}
+
+.status-completed {
+  background-color: #f0f9eb;
+}
+
+.status-cancelled {
+  background-color: #f8f8f8;
+}
+
+.status-info {
+  flex: 1;
+}
+
+.status-text {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+  display: block;
+  margin-bottom: 10rpx;
+}
+
+.status-desc {
+  font-size: 26rpx;
+  color: #666;
+  display: block;
+}
+
+/* 卡片样式 */
+.order-info-card,
+.file-info-card,
+.print-config-card,
+.pickup-card,
+.payment-card,
+.remark-card {
+  background-color: #fff;
+  border-radius: 12rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.card-header {
+  border-bottom: 1rpx solid #eee;
+  padding-bottom: 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.card-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+/* 信息列表 */
+.info-list,
+.config-list,
+.payment-list {
+  font-size: 28rpx;
+}
+
+.info-item,
+.config-item,
+.payment-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 15rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.info-item:last-child,
+.config-item:last-child,
+.payment-item:last-child {
+  border-bottom: none;
+}
+
+.info-label,
+.config-label,
+.payment-label {
+  color: #666;
+}
+
+.info-value,
+.config-value,
+.payment-value {
+  color: #333;
+  font-weight: 500;
+}
+
+/* 文件信息 */
+.file-section {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0;
+}
+
+.file-icon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 12rpx;
+  background-color: #f5f7fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+  font-size: 40rpx;
+}
+
+.file-info {
+  flex: 1;
+}
+
+.file-name {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+  margin-bottom: 10rpx;
+  display: block;
+  word-break: break-all;
+}
+
+.file-desc {
+  font-size: 24rpx;
+  color: #666;
+  display: block;
+}
+
+/* 取件信息 */
+.verify-section {
+  padding: 20rpx 0;
+  text-align: center;
+}
+
+.verify-code-display {
+  margin: 20rpx 0;
+}
+
+.verify-code {
+  font-size: 60rpx;
+  font-weight: 600;
+  color: #1e3c72;
+  letter-spacing: 10rpx;
+}
+
+.verify-tip {
+  font-size: 24rpx;
+  color: #666;
+  margin-top: 10rpx;
+}
+
+.pickup-info {
+  margin-top: 20rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx dashed #eee;
+}
+
+.pickup-address,
+.pickup-time,
+.pickup-contact {
+  font-size: 26rpx;
+  color: #333;
+  display: block;
+  margin-bottom: 10rpx;
+}
+
+/* 费用信息 */
+.payment-item.total {
+  margin-top: 10rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx dashed #eee;
+}
+
+.payment-item.total .payment-label,
+.payment-item.total .payment-value {
+  font-weight: 600;
+  color: #1e3c72;
+  font-size: 32rpx;
+}
+
+.payment-value.discount {
+  color: #ff6b6b;
+}
+
+/* 备注信息 */
+.remark-content {
+  font-size: 28rpx;
+  color: #666;
+  line-height: 1.6;
+  padding: 10rpx 0;
+}
+
+/* 操作按钮 */
+.action-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 40rpx;
+  padding: 0 20rpx;
+}
+
+.btn {
+  padding: 20rpx 40rpx;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  font-weight: 500;
+  text-align: center;
+  flex: 1;
+  margin: 0 10rpx;
+}
+
+.btn.primary {
+  background-color: #1e3c72;
+  color: #fff;
+}
+
+.btn.secondary {
+  background-color: #f5f7fa;
+  color: #666;
+  border: 1rpx solid #ddd;
+}
+
+/* 加载中 */
+.loading-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 0;
+}
+
+.loading-icon {
+  font-size: 60rpx;
+  margin-bottom: 20rpx;
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #666;
+}
+
+/* 错误提示 */
+.error-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 30rpx;
+}
+
+.error-icon {
+  font-size: 60rpx;
+  margin-bottom: 20rpx;
+}
+
+.error-text {
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 30rpx;
+  text-align: center;
+}

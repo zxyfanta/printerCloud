@@ -5,6 +5,7 @@ import com.printercloud.admin.service.AuthService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import javax.swing.*;
@@ -21,6 +22,9 @@ public class SwingApplication {
     
     @Autowired
     private AuthService authService;
+    
+    @Autowired
+    private ApplicationContext applicationContext;
     
     private LoginFrame loginFrame;
     private MainFrame mainFrame;
@@ -212,5 +216,12 @@ public class SwingApplication {
             JOptionPane.YES_NO_OPTION,
             JOptionPane.QUESTION_MESSAGE
         ) == JOptionPane.YES_OPTION;
+    }
+    
+    /**
+     * 获取Spring应用程序上下文
+     */
+    public ApplicationContext getApplicationContext() {
+        return applicationContext;
     }
 }

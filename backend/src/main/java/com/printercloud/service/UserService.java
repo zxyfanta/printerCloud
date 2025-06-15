@@ -5,12 +5,17 @@ import com.printercloud.repository.UserRepository;
 import com.printercloud.repository.PrintOrderRepository;
 import com.printercloud.service.PriceConfigService;
 import com.printercloud.util.JwtUtil;
+import com.printercloud.config.WechatConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.ResponseEntity;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
@@ -40,6 +45,12 @@ public class UserService {
     @Autowired
     private PriceConfigService priceConfigService;
 
+    @Autowired
+    private WechatConfig wechatConfig;
+
+    @Value("${app.env:dev}")
+    private String appEnv;
+
     @Value("${admin.default.username}")
     private String defaultAdminUsername;
 
@@ -53,6 +64,8 @@ public class UserService {
     private String defaultSuperAdminPassword;
 
     private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private RestTemplate restTemplate = new RestTemplate();
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * 初始化默认管理员账户
@@ -102,25 +115,154 @@ public class UserService {
     }
 
     /**
-     * 微信登录（简化版，实际应该调用微信API）
+     * 微信登录
      */
     public User wechatLogin(String code) {
-        // 这里应该调用微信API获取用户信息
-        // 为了演示，我们创建一个模拟用户
-        String openId = "mock_openid_" + code;
-        
-        Optional<User> userOpt = userRepository.findByOpenId(openId);
-        if (userOpt.isPresent()) {
-            return userOpt.get();
-        } else {
-            // 创建新用户
-            User user = new User();
-            user.setOpenId(openId);
-            user.setNickname("微信用户");
-            user.setRole("USER");
-            user.setStatus(0);
-            return userRepository.save(user);
+        System.out.println("开始微信登录，code: " + code);
+        try {
+            // 调用微信API获取用户信息
+            WechatUserInfo wechatUserInfo = getWechatUserInfo(code);
+            System.out.println("获取到微信用户信息: " + (wechatUserInfo != null ? wechatUserInfo.getOpenId() : "null"));
+            if (wechatUserInfo == null || wechatUserInfo.getOpenId() == null) {
+                throw new RuntimeException("获取微信用户信息失败");
+            }
+            
+            String openId = wechatUserInfo.getOpenId();
+            
+            // 查找现有用户
+            Optional<User> userOpt = userRepository.findByOpenId(openId);
+            if (userOpt.isPresent()) {
+                User existingUser = userOpt.get();
+                // 更新用户信息
+                if (wechatUserInfo.getNickname() != null) {
+                    existingUser.setNickname(wechatUserInfo.getNickname());
+                }
+                if (wechatUserInfo.getAvatarUrl() != null) {
+                     existingUser.setAvatarUrl(wechatUserInfo.getAvatarUrl());
+                 }
+                return userRepository.save(existingUser);
+            } else {
+                // 创建新用户
+                User user = new User();
+                user.setOpenId(openId);
+                user.setNickname(wechatUserInfo.getNickname() != null ? wechatUserInfo.getNickname() : "微信用户");
+                user.setAvatarUrl(wechatUserInfo.getAvatarUrl());
+                user.setRole("USER");
+                user.setStatus(0);
+                return userRepository.save(user);
+            }
+        } catch (Exception e) {
+            System.out.println("微信登录异常: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("微信登录失败: " + e.getMessage());
         }
+    }
+    
+    /**
+     * 获取微信用户信息
+     */
+    private WechatUserInfo getWechatUserInfo(String code) {
+        System.out.println("getWechatUserInfo被调用，code: " + code);
+        
+        // 开发环境下直接返回模拟数据
+        if (isDevEnvironment()) {
+            System.out.println("当前为开发环境，返回模拟数据");
+            WechatUserInfo mockInfo = new WechatUserInfo();
+            mockInfo.setOpenId("mock_openid_" + code);
+            mockInfo.setNickname("微信用户_" + code.substring(0, Math.min(6, code.length())));
+            mockInfo.setAvatarUrl("https://thirdwx.qlogo.cn/mmopen/vi_32/default_avatar.png");
+            return mockInfo;
+        }
+        
+        // 生产环境下调用真实的微信API
+        try {
+            // 检查微信配置
+            if ("your_wechat_appid".equals(wechatConfig.getAppid()) || 
+                "your_wechat_secret".equals(wechatConfig.getSecret())) {
+                throw new RuntimeException("请配置正确的微信小程序AppID和Secret");
+            }
+            
+            // 构建请求URL
+            String url = String.format("%s?appid=%s&secret=%s&js_code=%s&grant_type=authorization_code",
+                    wechatConfig.getCode2sessionUrl(),
+                    wechatConfig.getAppid(),
+                    wechatConfig.getSecret(),
+                    code);
+            
+            System.out.println("调用微信code2Session接口: " + url.replaceAll("secret=[^&]*", "secret=***"));
+            
+            // 发送HTTP请求
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+            String responseBody = response.getBody();
+            
+            System.out.println("微信API响应: " + responseBody);
+            
+            // 解析响应
+            JsonNode jsonNode = objectMapper.readTree(responseBody);
+            
+            // 检查是否有错误
+            if (jsonNode.has("errcode")) {
+                int errcode = jsonNode.get("errcode").asInt();
+                String errmsg = jsonNode.has("errmsg") ? jsonNode.get("errmsg").asText() : "未知错误";
+                throw new RuntimeException("微信API调用失败: " + errcode + " - " + errmsg);
+            }
+            
+            // 提取openid和session_key
+            String openid = jsonNode.has("openid") ? jsonNode.get("openid").asText() : null;
+            String sessionKey = jsonNode.has("session_key") ? jsonNode.get("session_key").asText() : null;
+            String unionid = jsonNode.has("unionid") ? jsonNode.get("unionid").asText() : null;
+            
+            if (openid == null) {
+                throw new RuntimeException("微信API返回的openid为空");
+            }
+            
+            // 创建用户信息对象
+            WechatUserInfo userInfo = new WechatUserInfo();
+            userInfo.setOpenId(openid);
+            userInfo.setSessionKey(sessionKey);
+            userInfo.setUnionId(unionid);
+            // 注意：code2Session接口不返回用户昵称和头像，需要用户主动授权获取
+            userInfo.setNickname("微信用户");
+            userInfo.setAvatarUrl("https://thirdwx.qlogo.cn/mmopen/vi_32/default_avatar.png");
+            
+            return userInfo;
+            
+        } catch (Exception e) {
+            System.out.println("调用微信API异常: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("获取微信用户信息失败: " + e.getMessage());
+        }
+    }
+    
+
+    
+    /**
+     * 检查是否为开发环境
+     */
+    private boolean isDevEnvironment() {
+        return "dev".equals(appEnv);
+    }
+    
+    /**
+     * 微信用户信息内部类
+     */
+    private static class WechatUserInfo {
+        private String openId;
+        private String nickname;
+        private String avatarUrl;
+        private String sessionKey;
+        private String unionId;
+        
+        public String getOpenId() { return openId; }
+        public void setOpenId(String openId) { this.openId = openId; }
+        public String getNickname() { return nickname; }
+        public void setNickname(String nickname) { this.nickname = nickname; }
+        public String getAvatarUrl() { return avatarUrl; }
+        public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+        public String getSessionKey() { return sessionKey; }
+        public void setSessionKey(String sessionKey) { this.sessionKey = sessionKey; }
+        public String getUnionId() { return unionId; }
+        public void setUnionId(String unionId) { this.unionId = unionId; }
     }
 
     /**

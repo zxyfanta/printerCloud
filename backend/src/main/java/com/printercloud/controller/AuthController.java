@@ -49,6 +49,9 @@ public class AuthController {
             @Parameter(description = "登录请求参数", required = true) @RequestBody LoginRequest request) {
         Map<String, Object> response = new HashMap<>();
         
+        // 添加调试日志
+        System.out.println("收到登录请求，loginType: " + request.getLoginType() + ", code: " + request.getCode());
+        
         try {
             if ("ADMIN".equals(request.getLoginType())) {
                 // 管理员登录

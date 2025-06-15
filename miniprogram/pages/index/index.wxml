@@ -17,7 +17,7 @@
 
   <!-- 快速操作 -->
   <view class="quick-action">
-    <button class="quick-btn primary" bindtap="goToUpload">
+    <button class="quick-btn primary" bindtap="startPrint">
       <view class="quick-btn-icon">🖨️</view>
       <text class="quick-btn-text">开始打印</text>
       <text class="quick-btn-desc">上传文件，一键打印</text>
@@ -32,7 +32,7 @@
     </view>
 
     <view class="service-grid">
-      <view class="service-item primary" bindtap="goToUpload">
+      <view class="service-item primary" bindtap="startPrint">
         <view class="service-icon-wrapper">
           <view class="service-icon primary">
             <text class="icon-emoji">🖨️</text>

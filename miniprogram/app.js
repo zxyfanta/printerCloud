@@ -3,13 +3,35 @@ App({
   globalData: {
     userInfo: null,
     token: null,
-    baseUrl: 'http://localhost:8082/api', // 后端API地址
-    ossBaseUrl: '', // OSS文件访问地址
+    // 环境配置
+    env: {
+      dev: {
+        baseUrl: 'http://localhost:8082/api',
+        ossBaseUrl: ''
+      },
+      prod: {
+        baseUrl: 'https://your-domain.com/api', // 生产环境需要替换为实际的HTTPS域名
+        ossBaseUrl: 'https://your-domain.com/files' // 生产环境文件访问地址
+      }
+    },
+    // 当前环境：dev-开发环境，prod-生产环境
+    currentEnv: 'dev',
+    // API基础地址
+    get baseUrl() {
+      return this.env[this.currentEnv].baseUrl;
+    },
+    // OSS文件访问地址
+    get ossBaseUrl() {
+      return this.env[this.currentEnv].ossBaseUrl;
+    },
     isLogin: false
   },
 
   onLaunch() {
     console.log('云打印小程序启动');
+
+    // 初始化环境配置
+    this.initEnvConfig();
 
     // 延迟执行初始化操作，避免过早调用API
     setTimeout(() => {
@@ -42,6 +64,42 @@ App({
     if (msg && !msg.includes('reportKeyValue')) {
       // 可以在这里添加错误上报逻辑
       console.error('需要处理的错误：', msg);
+    }
+  },
+
+  /**
+   * 初始化环境配置
+   */
+  initEnvConfig() {
+    try {
+      // 尝试从本地存储获取环境配置
+      const savedEnv = wx.getStorageSync('currentEnv');
+      if (savedEnv && (savedEnv === 'dev' || savedEnv === 'prod')) {
+        this.globalData.currentEnv = savedEnv;
+      }
+
+      // 根据小程序版本自动切换环境
+      // 开发版、体验版使用开发环境，正式版使用生产环境
+      const accountInfo = wx.getAccountInfoSync();
+      if (accountInfo && accountInfo.miniProgram) {
+        const envVersion = accountInfo.miniProgram.envVersion;
+        
+        if (envVersion === 'release') {
+          // 正式版使用生产环境
+          this.globalData.currentEnv = 'prod';
+        } else {
+          // 开发版、体验版使用开发环境
+          this.globalData.currentEnv = 'dev';
+        }
+
+        // 保存当前环境到本地存储
+        wx.setStorageSync('currentEnv', this.globalData.currentEnv);
+      }
+
+      console.log('当前环境：', this.globalData.currentEnv);
+      console.log('API地址：', this.globalData.baseUrl);
+    } catch (error) {
+      console.error('初始化环境配置失败：', error);
     }
   },
 
@@ -99,22 +157,29 @@ App({
         success: (res) => {
           if (res.code) {
             // 发送 res.code 到后台换取 openId, sessionKey, unionId
+            console.log('发送登录请求，参数：', {
+              code: res.code,
+              loginType: 'WECHAT'
+            });
             this.request({
               url: '/auth/login',
               method: 'POST',
               data: {
-                code: res.code
+                code: res.code,
+                loginType: 'WECHAT'
               }
             }).then(result => {
+              console.log('后端登录响应：', result);
               if (result.code === 200) {
                 this.globalData.token = result.data.token;
-                this.globalData.userInfo = result.data.userInfo;
+                this.globalData.userInfo = result.data.user;
                 this.globalData.isLogin = true;
                 
                 // 保存到本地存储
                 wx.setStorageSync('token', result.data.token);
-                wx.setStorageSync('userInfo', result.data.userInfo);
+                wx.setStorageSync('userInfo', result.data.user);
                 
+                console.log('登录成功，用户信息：', result.data.user);
                 resolve(result.data);
               } else {
                 reject(new Error(result.message));
