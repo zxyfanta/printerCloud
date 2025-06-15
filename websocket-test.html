@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket连接测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .status.connected {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.connecting {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 10px 0;
+        }
+        .log-entry {
+            margin: 2px 0;
+            padding: 2px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .log-entry.info { color: #007bff; }
+        .log-entry.success { color: #28a745; }
+        .log-entry.warning { color: #ffc107; }
+        .log-entry.error { color: #dc3545; }
+        input, select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>WebSocket连接测试</h1>
+        
+        <div id="status" class="status disconnected">
+            状态: 未连接
+        </div>
+
+        <div>
+            <label>服务器地址:</label>
+            <input type="text" id="serverUrl" value="http://localhost:8082/api/ws" style="width: 300px;">
+        </div>
+
+        <div>
+            <button id="connectBtn" onclick="connect()">连接</button>
+            <button id="disconnectBtn" onclick="disconnect()" disabled>断开</button>
+            <button onclick="clearLog()">清空日志</button>
+            <button onclick="testNotification()">发送测试通知</button>
+        </div>
+
+        <div>
+            <h3>发送测试消息</h3>
+            <select id="topicSelect">
+                <option value="test">test</option>
+                <option value="newOrders">newOrders</option>
+                <option value="orderUpdates">orderUpdates</option>
+                <option value="system">system</option>
+            </select>
+            <input type="text" id="messageInput" placeholder="输入消息内容" value="Hello WebSocket!">
+            <button onclick="sendMessage()">发送消息</button>
+        </div>
+
+        <div>
+            <h3>连接日志</h3>
+            <div id="log" class="log"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+    <script>
+        let stompClient = null;
+        let connected = false;
+
+        function updateStatus(status, className) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = `状态: ${status}`;
+            statusEl.className = `status ${className}`;
+        }
+
+        function log(message, type = 'info') {
+            const logEl = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logEl.appendChild(entry);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function connect() {
+            const serverUrl = document.getElementById('serverUrl').value;
+            
+            if (connected) {
+                log('已经连接，请先断开', 'warning');
+                return;
+            }
+
+            updateStatus('连接中...', 'connecting');
+            log(`尝试连接到: ${serverUrl}`, 'info');
+
+            const socket = new SockJS(serverUrl);
+            stompClient = new StompJs.Client({
+                webSocketFactory: () => socket,
+                debug: (str) => log(`STOMP: ${str}`, 'info'),
+                onConnect: (frame) => {
+                    connected = true;
+                    updateStatus('已连接', 'connected');
+                    log('WebSocket连接成功!', 'success');
+                    
+                    document.getElementById('connectBtn').disabled = true;
+                    document.getElementById('disconnectBtn').disabled = false;
+
+                    // 订阅各种主题
+                    subscribeToTopics();
+                },
+                onStompError: (frame) => {
+                    connected = false;
+                    updateStatus('STOMP错误', 'disconnected');
+                    log(`STOMP错误: ${frame.headers['message']}`, 'error');
+                    log(`详细信息: ${frame.body}`, 'error');
+                },
+                onWebSocketClose: (event) => {
+                    connected = false;
+                    updateStatus('连接关闭', 'disconnected');
+                    log(`WebSocket连接关闭: ${event.reason}`, 'warning');
+                    
+                    document.getElementById('connectBtn').disabled = false;
+                    document.getElementById('disconnectBtn').disabled = true;
+                },
+                onWebSocketError: (event) => {
+                    connected = false;
+                    updateStatus('连接错误', 'disconnected');
+                    log('WebSocket连接错误', 'error');
+                }
+            });
+
+            stompClient.activate();
+        }
+
+        function disconnect() {
+            if (stompClient && connected) {
+                stompClient.deactivate();
+                connected = false;
+                updateStatus('已断开', 'disconnected');
+                log('主动断开连接', 'info');
+                
+                document.getElementById('connectBtn').disabled = false;
+                document.getElementById('disconnectBtn').disabled = true;
+            }
+        }
+
+        function subscribeToTopics() {
+            const topics = ['test', 'newOrders', 'orderUpdates', 'system'];
+            
+            topics.forEach(topic => {
+                stompClient.subscribe(`/topic/${topic}`, (message) => {
+                    const data = JSON.parse(message.body);
+                    log(`收到 ${topic} 消息: ${JSON.stringify(data)}`, 'success');
+                });
+                log(`订阅主题: /topic/${topic}`, 'info');
+            });
+        }
+
+        function sendMessage() {
+            if (!connected || !stompClient) {
+                log('未连接，无法发送消息', 'error');
+                return;
+            }
+
+            const topic = document.getElementById('topicSelect').value;
+            const message = document.getElementById('messageInput').value;
+
+            const data = {
+                type: 'TEST',
+                message: message,
+                timestamp: new Date().toISOString()
+            };
+
+            stompClient.publish({
+                destination: `/app/${topic}`,
+                body: JSON.stringify(data)
+            });
+
+            log(`发送消息到 /app/${topic}: ${message}`, 'info');
+        }
+
+        function testNotification() {
+            fetch('http://localhost:8082/api/websocket/test-notification', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                log(`测试通知响应: ${JSON.stringify(data)}`, 'info');
+            })
+            .catch(error => {
+                log(`发送测试通知失败: ${error.message}`, 'error');
+            });
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        // 页面加载完成后的初始化
+        window.onload = function() {
+            log('WebSocket测试页面已加载', 'info');
+            log('点击"连接"按钮开始测试', 'info');
+        };
+    </script>
+</body>
+</html>

@@ -2,6 +2,7 @@ package com.printercloud.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.lang.NonNull;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
@@ -37,7 +38,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     }
 
     @Override
-    public void configureMessageBroker(MessageBrokerRegistry config) {
+    public void configureMessageBroker(@NonNull MessageBrokerRegistry config) {
         // 启用简单的消息代理，并设置消息代理的前缀
         config.enableSimpleBroker("/topic", "/queue")
               .setTaskScheduler(taskScheduler())
@@ -51,9 +52,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     }
 
     @Override
-    public void registerStompEndpoints(StompEndpointRegistry registry) {
+    public void registerStompEndpoints(@NonNull StompEndpointRegistry registry) {
         // 注册STOMP端点，支持跨域和SockJS降级
-        registry.addEndpoint("/ws")
+        registry.addEndpoint("/api/ws")
                 .setAllowedOriginPatterns("*") // 允许所有来源（生产环境应该限制具体域名）
                 .withSockJS()
                 .setHeartbeatTime(25000) // SockJS心跳间隔25秒
@@ -64,7 +65,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     }
 
     @Override
-    public void configureWebSocketTransport(WebSocketTransportRegistration registry) {
+    public void configureWebSocketTransport(@NonNull WebSocketTransportRegistration registry) {
         // 配置WebSocket传输参数
         registry.setMessageSizeLimit(64 * 1024) // 消息大小限制64KB
                 .setSendBufferSizeLimit(512 * 1024) // 发送缓冲区大小512KB

@@ -7,6 +7,8 @@ import com.printercloud.service.PriceConfigService;
 import com.printercloud.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -172,6 +174,36 @@ public class UserService {
     }
 
     /**
+     * 获取用户列表（分页）
+     */
+    public Page<User> getUserList(Pageable pageable, String search, String role, Integer status) {
+        if (search != null && !search.trim().isEmpty()) {
+            // 如果有搜索条件，使用自定义查询
+            return userRepository.findBySearchCriteria(search.trim(), role, status, pageable);
+        } else if (role != null || status != null) {
+            // 如果有角色或状态过滤
+            return userRepository.findByRoleAndStatus(role, status, pageable);
+        } else {
+            // 获取所有未删除的用户
+            return userRepository.findByDeletedFalse(pageable);
+        }
+    }
+
+    /**
+     * 重置用户密码
+     */
+    public boolean resetPassword(Long userId, String newPassword) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            user.setPassword(passwordEncoder.encode(newPassword));
+            userRepository.save(user);
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * 修改密码
      */
     public boolean changePassword(Long userId, String oldPassword, String newPassword) {
@@ -187,19 +219,7 @@ public class UserService {
         return false;
     }
 
-    /**
-     * 重置密码（管理员功能）
-     */
-    public boolean resetPassword(Long userId, String newPassword) {
-        Optional<User> userOpt = userRepository.findById(userId);
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-            user.setPassword(passwordEncoder.encode(newPassword));
-            userRepository.save(user);
-            return true;
-        }
-        return false;
-    }
+
 
     /**
      * 验证token并获取用户

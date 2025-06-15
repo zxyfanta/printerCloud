@@ -20,7 +20,7 @@ import java.util.Map;
  * @since 2024-01-01
  */
 @RestController
-@RequestMapping("/price")
+@RequestMapping("/api/price")
 @CrossOrigin(origins = "*")
 public class PriceConfigController {
 

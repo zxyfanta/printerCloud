@@ -20,6 +20,6 @@
         "bigPackageSizeSupport": false,
         "useIsolateContext": true
     },
-    "libVersion": "2.19.4",
+    "libVersion": "3.8.8",
     "condition": {}
 }

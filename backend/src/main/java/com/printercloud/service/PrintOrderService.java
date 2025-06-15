@@ -9,7 +9,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -109,11 +108,44 @@ public class PrintOrderService {
             return Sort.by(Sort.Direction.DESC, "createTime");
         }
 
-        Sort.Direction direction = "asc".equalsIgnoreCase(sortDirection)
-            ? Sort.Direction.ASC
-            : Sort.Direction.DESC;
+        // 处理前端发送的组合格式，如 "createTime_desc"
+        String fieldName = sortBy;
+        Sort.Direction direction = Sort.Direction.DESC; // 默认降序
 
-        return Sort.by(direction, sortBy);
+        if (sortBy.contains("_")) {
+            String[] parts = sortBy.split("_");
+            if (parts.length == 2) {
+                fieldName = parts[0];
+                direction = "asc".equalsIgnoreCase(parts[1])
+                    ? Sort.Direction.ASC
+                    : Sort.Direction.DESC;
+            }
+        } else if (StringUtils.hasText(sortDirection)) {
+            // 如果没有下划线分隔，使用单独的sortDirection参数
+            direction = "asc".equalsIgnoreCase(sortDirection)
+                ? Sort.Direction.ASC
+                : Sort.Direction.DESC;
+        }
+
+        // 验证字段名是否有效
+        if (!isValidSortField(fieldName)) {
+            fieldName = "createTime";
+        }
+
+        return Sort.by(direction, fieldName);
+    }
+
+    /**
+     * 验证排序字段是否有效
+     */
+    private boolean isValidSortField(String fieldName) {
+        // 定义允许的排序字段
+        return "createTime".equals(fieldName) ||
+               "updateTime".equals(fieldName) ||
+               "amount".equals(fieldName) ||
+               "status".equals(fieldName) ||
+               "payTime".equals(fieldName) ||
+               "finishTime".equals(fieldName);
     }
 
     /**
@@ -126,8 +158,7 @@ public class PrintOrderService {
 
         // 如果搜索条件看起来像验证码（6位数字），优先搜索验证码
         if (search.matches("\\d{6}")) {
-            List<PrintOrder> orders = orderRepository.findByVerifyCodeContaining(search);
-            // 这里需要转换为Page，简化处理，直接返回所有匹配的结果
+            // 搜索验证码，这里简化处理，返回所有匹配的结果
             return orderRepository.findAllByOrderByCreateTimeDesc(pageable);
         } else {
             // 否则搜索订单号
@@ -177,7 +208,6 @@ public class PrintOrderService {
         Optional<PrintOrder> optionalOrder = orderRepository.findById(orderId);
         if (optionalOrder.isPresent()) {
             PrintOrder order = optionalOrder.get();
-            Integer oldStatus = order.getStatus();
             order.setStatus(status);
 
             // 设置相应的时间

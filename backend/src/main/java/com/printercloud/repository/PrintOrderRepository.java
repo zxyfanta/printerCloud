@@ -136,7 +136,7 @@ public interface PrintOrderRepository extends JpaRepository<PrintOrder, Long> {
     /**
      * 统计用户打印总页数
      */
-    @Query("SELECT SUM(o.copies * o.pageCount) FROM PrintOrder o WHERE o.userId = :userId")
+    @Query("SELECT SUM(o.copies * o.actualPages) FROM PrintOrder o WHERE o.userId = :userId")
     Long sumPagesByUserId(@Param("userId") Long userId);
 
     /**

@@ -20,7 +20,7 @@ import java.util.Map;
  * @since 2024-01-01
  */
 @RestController
-@RequestMapping("/orders")
+@RequestMapping("/api/orders")
 @CrossOrigin(origins = "*") // 允许跨域访问
 public class PrintOrderController {
 
@@ -71,7 +71,7 @@ public class PrintOrderController {
             request.setPageSize(pageSize);
 
             Page<PrintOrder> orderPage = orderService.getOrderList(request);
-            
+
             Map<String, Object> response = new HashMap<>();
             response.put("code", 200);
             response.put("success", true);
@@ -85,9 +85,10 @@ public class PrintOrderController {
             data.put("pageSize", pageSize);
 
             response.put("data", data);
-            
+
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+
             Map<String, Object> response = new HashMap<>();
             response.put("code", 500);
             response.put("success", false);

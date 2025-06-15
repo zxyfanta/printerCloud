@@ -52,7 +52,11 @@ public class FileService {
         }
 
         // 获取原始文件名
-        String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null || originalFilename.trim().isEmpty()) {
+            throw new IllegalArgumentException("文件名不能为空");
+        }
+        originalFilename = StringUtils.cleanPath(originalFilename);
         
         // 生成新的文件名
         String fileExtension = getFileExtension(originalFilename);

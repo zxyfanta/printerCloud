@@ -19,7 +19,7 @@ import java.util.Map;
  * @since 2024-01-01
  */
 @RestController
-@RequestMapping("/config")
+@RequestMapping("/api/config")
 @CrossOrigin(origins = "*")
 public class SystemConfigController {
 
