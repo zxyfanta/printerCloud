@@ -95,8 +95,11 @@ public class FileService {
         // 异步解析文件信息（页数等）
         fileParseService.parseFileAsync(savedFile.getId());
         
-        // 异步将非图片文件转换为PDF
-        pdfConversionService.convertToPdfAsync(savedFile.getId());
+        // 如果是PDF文件，直接设置预览路径
+        if (savedFile.isPdf()) {
+            savedFile.setPreviewPath(savedFile.getFilePath());
+            fileRepository.save(savedFile);
+        }
 
         return savedFile;
     }

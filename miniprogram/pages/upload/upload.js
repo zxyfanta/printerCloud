@@ -205,6 +205,9 @@ Page({
 
             // 存储到全局数据
             app.globalData.tempFileInfo = updatedFileInfo;
+            
+            // 开始轮询获取文件信息
+            this.startPollingFileInfo(data.data.id);
 
           } else {
             this.handleUploadError(data.message || '上传失败');
@@ -224,6 +227,83 @@ Page({
       this.setData({
         uploadProgress: res.progress
       });
+    });
+  },
+
+  /**
+   * 开始轮询获取文件信息
+   */
+  startPollingFileInfo(fileId) {
+    console.log('开始轮询获取文件信息', fileId);
+    
+    // 设置轮询间隔（毫秒）
+    const pollingInterval = 2000; // 2秒
+    
+    // 最大轮询次数
+    const maxPollingCount = 30; // 最多轮询30次，约1分钟
+    
+    let pollingCount = 0;
+    
+    // 创建轮询定时器
+    const pollingTimer = setInterval(() => {
+      pollingCount++;
+      
+      // 超过最大轮询次数，停止轮询
+      if (pollingCount > maxPollingCount) {
+        clearInterval(pollingTimer);
+        console.log('轮询次数达到上限，停止轮询');
+        return;
+      }
+      
+      // 发起请求获取文件信息
+      this.getFileInfo(fileId).then(fileInfo => {
+        // 更新文件信息
+        const updatedFileInfo = {
+          ...this.data.fileInfo,
+          pageCount: fileInfo.pageCount,
+          status: fileInfo.status,
+          serverData: fileInfo
+        };
+        
+        this.setData({
+          fileInfo: updatedFileInfo
+        });
+        
+        // 如果文件解析完成，停止轮询
+        if (fileInfo.status === 3) { // 3-解析成功
+          clearInterval(pollingTimer);
+          console.log('文件解析完成，停止轮询');
+        }
+        
+        // 如果文件解析失败，停止轮询
+        if (fileInfo.status === 4) { // 4-解析失败
+          clearInterval(pollingTimer);
+          console.log('文件解析失败，停止轮询');
+          app.showError('文件解析失败：' + (fileInfo.parseError || '未知错误'));
+        }
+        
+      }).catch(err => {
+        console.error('获取文件信息失败：', err);
+      });
+      
+    }, pollingInterval);
+  },
+  
+  /**
+   * 获取文件信息
+   */
+  getFileInfo(fileId) {
+    return new Promise((resolve, reject) => {
+      app.request({
+        url: `/file/info/${fileId}`,
+        method: 'GET'
+      }).then(res => {
+        if (res.code === 200) {
+          resolve(res.data);
+        } else {
+          reject(new Error(res.message || '获取文件信息失败'));
+        }
+      }).catch(reject);
     });
   },
 

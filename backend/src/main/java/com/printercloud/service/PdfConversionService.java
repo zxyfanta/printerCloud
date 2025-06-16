@@ -7,6 +7,7 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.hwpf.HWPFDocument;
@@ -44,6 +45,81 @@ public class PdfConversionService {
     
     @Value("${file.upload.path}")
     private String uploadPath;
+    
+    // 添加一个方法来获取支持中文的字体
+    private PDType0Font getChineseFont(PDDocument document) throws IOException {
+        try {
+            // 尝试加载系统中的中文字体
+            // 常见的中文字体名称
+            String[] fontNames = {
+                "/System/Library/Fonts/PingFang.ttc",
+                "/System/Library/Fonts/STHeiti Light.ttc",
+                "/System/Library/Fonts/Arial Unicode.ttf",
+                "/System/Library/Fonts/AppleGothic.ttf",
+                "/usr/share/fonts/truetype/arphic/uming.ttc",
+                "/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf",
+                "C:/Windows/Fonts/simhei.ttf",
+                "C:/Windows/Fonts/simsun.ttc",
+                "C:/Windows/Fonts/msyh.ttf"
+            };
+            
+            for (String fontPath : fontNames) {
+                try {
+                    File fontFile = new File(fontPath);
+                    if (fontFile.exists()) {
+                        return PDType0Font.load(document, fontFile);
+                    }
+                } catch (Exception e) {
+                    logger.warn("无法加载字体: {}", fontPath, e);
+                }
+            }
+            
+            // 如果找不到中文字体，创建一个内嵌的基本字体
+            logger.warn("未找到中文字体，将使用基本字体，中文可能无法正确显示");
+            return PDType0Font.load(document, getClass().getResourceAsStream("/org/apache/pdfbox/resources/ttf/LiberationSans-Regular.ttf"));
+        } catch (Exception e) {
+            logger.error("加载中文字体失败，将使用基本字体", e);
+            // 如果所有尝试都失败，返回基本字体
+            return PDType0Font.load(document, getClass().getResourceAsStream("/org/apache/pdfbox/resources/ttf/LiberationSans-Regular.ttf"));
+        }
+    }
+    
+    // 添加一个方法来获取支持中文的粗体字体
+    private PDType0Font getChineseBoldFont(PDDocument document) throws IOException {
+        try {
+            // 尝试加载系统中的中文粗体字体
+            String[] fontNames = {
+                "/System/Library/Fonts/PingFang.ttc",
+                "/System/Library/Fonts/STHeiti Medium.ttc",
+                "/System/Library/Fonts/Arial Unicode.ttf",
+                "/System/Library/Fonts/AppleGothic.ttf",
+                "/usr/share/fonts/truetype/arphic/uming.ttc",
+                "/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf",
+                "C:/Windows/Fonts/simhei.ttf",
+                "C:/Windows/Fonts/simsun.ttc",
+                "C:/Windows/Fonts/msyh.ttf"
+            };
+            
+            for (String fontPath : fontNames) {
+                try {
+                    File fontFile = new File(fontPath);
+                    if (fontFile.exists()) {
+                        return PDType0Font.load(document, fontFile);
+                    }
+                } catch (Exception e) {
+                    logger.warn("无法加载粗体字体: {}", fontPath, e);
+                }
+            }
+            
+            // 如果找不到中文粗体字体，创建一个内嵌的基本粗体字体
+            logger.warn("未找到中文粗体字体，将使用基本粗体字体，中文可能无法正确显示");
+            return PDType0Font.load(document, getClass().getResourceAsStream("/org/apache/pdfbox/resources/ttf/LiberationSans-Bold.ttf"));
+        } catch (Exception e) {
+            logger.error("加载中文粗体字体失败，将使用基本粗体字体", e);
+            // 如果所有尝试都失败，返回基本粗体字体
+            return PDType0Font.load(document, getClass().getResourceAsStream("/org/apache/pdfbox/resources/ttf/LiberationSans-Bold.ttf"));
+        }
+    }
     
     /**
      * 异步将文件转换为PDF
@@ -179,7 +255,8 @@ public class PdfConversionService {
                 // 添加文本到页面
                 try (PDPageContentStream contentStream = new PDPageContentStream(pdf, page)) {
                     contentStream.beginText();
-                    contentStream.setFont(PDType1Font.HELVETICA, 10);
+                    PDType0Font font = getChineseFont(pdf);
+                    contentStream.setFont(font, 10);
                     contentStream.newLineAtOffset(50, 750);
                     
                     // 分行显示文本
@@ -232,7 +309,9 @@ public class PdfConversionService {
                 
                 try (PDPageContentStream contentStream = new PDPageContentStream(pdf, page)) {
                     contentStream.beginText();
-                    contentStream.setFont(PDType1Font.HELVETICA, 10);
+                    // 使用中文字体替换西文字体
+                    PDType0Font font = getChineseFont(pdf);
+                    contentStream.setFont(font, 10);
                     contentStream.newLineAtOffset(50, 750);
                     
                     // 添加页码信息
@@ -241,10 +320,11 @@ public class PdfConversionService {
                     
                     // 如果是第一页，添加文档信息
                     if (i == 0) {
-                        contentStream.setFont(PDType1Font.HELVETICA_BOLD, 12);
+                        PDType0Font boldFont = getChineseBoldFont(pdf);
+                        contentStream.setFont(boldFont, 12);
                         contentStream.showText("文档: " + docxFile.getName());
                         contentStream.newLineAtOffset(0, -20);
-                        contentStream.setFont(PDType1Font.HELVETICA, 10);
+                        contentStream.setFont(font, 10);
                     }
                     
                     contentStream.endText();
@@ -277,7 +357,8 @@ public class PdfConversionService {
                 
                 try (PDPageContentStream contentStream = new PDPageContentStream(pdf, page)) {
                     contentStream.beginText();
-                    contentStream.setFont(PDType1Font.HELVETICA_BOLD, 12);
+                    PDType0Font boldFont = getChineseBoldFont(pdf);
+                    contentStream.setFont(boldFont, 12);
                     contentStream.newLineAtOffset(50, 750);
                     
                     // 添加工作表名称
@@ -321,7 +402,8 @@ public class PdfConversionService {
                 
                 try (PDPageContentStream contentStream = new PDPageContentStream(pdf, page)) {
                     contentStream.beginText();
-                    contentStream.setFont(PDType1Font.HELVETICA_BOLD, 12);
+                    PDType0Font boldFont = getChineseBoldFont(pdf);
+                    contentStream.setFont(boldFont, 12);
                     contentStream.newLineAtOffset(50, 750);
                     
                     // 添加工作表名称
@@ -365,7 +447,8 @@ public class PdfConversionService {
                 
                 try (PDPageContentStream contentStream = new PDPageContentStream(pdf, page)) {
                     contentStream.beginText();
-                    contentStream.setFont(PDType1Font.HELVETICA_BOLD, 12);
+                    PDType0Font boldFont = getChineseBoldFont(pdf);
+                    contentStream.setFont(boldFont, 12);
                     contentStream.newLineAtOffset(50, 750);
                     
                     // 添加幻灯片信息
@@ -408,7 +491,8 @@ public class PdfConversionService {
                 
                 try (PDPageContentStream contentStream = new PDPageContentStream(pdf, page)) {
                     contentStream.beginText();
-                    contentStream.setFont(PDType1Font.HELVETICA_BOLD, 12);
+                    PDType0Font boldFont = getChineseBoldFont(pdf);
+                    contentStream.setFont(boldFont, 12);
                     contentStream.newLineAtOffset(50, 750);
                     
                     // 添加幻灯片信息
@@ -484,11 +568,15 @@ public class PdfConversionService {
             
             try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
                 contentStream.beginText();
-                contentStream.setFont(PDType1Font.HELVETICA_BOLD, 12);
+                // 使用中文粗体字体
+                PDType0Font boldFont = getChineseBoldFont(document);
+                contentStream.setFont(boldFont, 12);
                 contentStream.newLineAtOffset(100, 700);
                 contentStream.showText("文件转换错误");
                 contentStream.newLineAtOffset(0, -20);
-                contentStream.setFont(PDType1Font.HELVETICA, 10);
+                // 使用中文常规字体
+                PDType0Font font = getChineseFont(document);
+                contentStream.setFont(font, 10);
                 contentStream.showText(errorMessage);
                 contentStream.endText();
             }

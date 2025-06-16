@@ -119,6 +119,66 @@ public class FileController {
     }
 
     /**
+     * 获取文件基本信息（用于轮询）
+     */
+    @GetMapping("/info/{id}")
+    public ResponseEntity<Map<String, Object>> getFileBasicInfo(
+            @RequestHeader("Authorization") String token,
+            @PathVariable Long id) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            // 移除Bearer前缀
+            if (token.startsWith("Bearer ")) {
+                token = token.substring(7);
+            }
+            
+            User currentUser = userService.validateTokenAndGetUser(token);
+            if (currentUser == null) {
+                response.put("code", 401);
+                response.put("message", "token无效");
+                return ResponseEntity.ok(response);
+            }
+            
+            PrintFile printFile = fileService.getFileById(id);
+            if (printFile == null) {
+                response.put("code", 404);
+                response.put("message", "文件不存在");
+                return ResponseEntity.ok(response);
+            }
+            
+            // 权限检查：用户只能查看自己的文件，管理员可以查看所有文件
+            if (!currentUser.isAdmin() && !printFile.getUserId().equals(currentUser.getId())) {
+                response.put("code", 403);
+                response.put("message", "无权限访问此文件");
+                return ResponseEntity.ok(response);
+            }
+            
+            // 构建基本信息响应
+            Map<String, Object> fileInfo = new HashMap<>();
+            fileInfo.put("id", printFile.getId());
+            fileInfo.put("originalName", printFile.getOriginalName());
+            fileInfo.put("fileSize", printFile.getFileSize());
+            fileInfo.put("fileType", printFile.getFileType());
+            fileInfo.put("pageCount", printFile.getPageCount());
+            fileInfo.put("status", printFile.getStatus());
+            fileInfo.put("parseError", printFile.getParseError());
+            fileInfo.put("createTime", printFile.getCreateTime());
+            fileInfo.put("updateTime", printFile.getUpdateTime());
+            
+            response.put("code", 200);
+            response.put("message", "获取成功");
+            response.put("data", fileInfo);
+            
+        } catch (Exception e) {
+            response.put("code", 500);
+            response.put("message", "获取文件信息失败: " + e.getMessage());
+        }
+        
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * 文件下载
      */
     @GetMapping("/download/{id}")
@@ -292,8 +352,8 @@ public class FileController {
     /**
      * 获取文件预览信息
      */
-    @GetMapping("/preview/{id}")
-    public ResponseEntity<Map<String, Object>> getFilePreview(
+    @GetMapping("/preview-info/{id}")
+    public ResponseEntity<Map<String, Object>> getFilePreviewInfo(
             @RequestHeader("Authorization") String token,
             @PathVariable Long id) {
         Map<String, Object> response = new HashMap<>();
@@ -332,15 +392,15 @@ public class FileController {
             previewInfo.put("fileType", printFile.getFileType());
             previewInfo.put("pageCount", printFile.getPageCount());
             
-            // 检查是否有预览路径
-            if (printFile.getPreviewPath() != null && !printFile.getPreviewPath().isEmpty()) {
+            // 只有PDF文件可以预览
+            if (printFile.isPdf() && printFile.getPreviewPath() != null && !printFile.getPreviewPath().isEmpty()) {
                 // 构建预览URL
                 String previewUrl = "/api/file/preview-content/" + printFile.getId();
                 previewInfo.put("previewUrl", previewUrl);
                 previewInfo.put("previewAvailable", true);
             } else {
                 previewInfo.put("previewAvailable", false);
-                previewInfo.put("previewMessage", "预览文件正在生成中或不可用");
+                previewInfo.put("previewMessage", "该文件类型不支持预览");
             }
             
             response.put("code", 200);
@@ -383,8 +443,8 @@ public class FileController {
                 return ResponseEntity.status(403).build();
             }
             
-            // 检查是否有预览路径
-            if (printFile.getPreviewPath() == null || printFile.getPreviewPath().isEmpty()) {
+            // 只有PDF文件可以预览
+            if (!printFile.isPdf() || printFile.getPreviewPath() == null || printFile.getPreviewPath().isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
             
