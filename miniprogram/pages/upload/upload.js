@@ -87,39 +87,52 @@ Page({
    * 处理文件选择
    */
   handleFileSelected(filePath, fileType, fileName, fileSize) {
-    // 获取文件信息
-    wx.getFileInfo({
-      filePath: filePath,
-      success: (res) => {
-        const fileType = fileType || this.getFileTypeFromPath(filePath);
-        const fileInfo = {
-          path: filePath,
-          name: fileName || this.getFileNameFromPath(filePath),
-          size: fileSize || res.size,
-          type: fileType,
-          uploaded: false,
-          // 预处理显示数据
-          icon: this.getFileIcon(fileType),
-          sizeText: this.formatFileSize(fileSize || res.size),
-          typeName: this.getFileTypeName(fileType),
-          isImage: this.isImageFile(fileType)
-        };
-
-        this.setData({
-          fileInfo: fileInfo,
-          showPreview: true
+    // 先验证token是否有效
+    app.validateToken().then(isValid => {
+      if (!isValid) {
+        // token无效，跳转到登录页面
+        wx.navigateTo({
+          url: '/pages/login/login?redirect=upload'
         });
-
-        // 生成本地预览
-        this.generateLocalPreview(fileInfo);
-
-        // 立即上传文件到服务器
-        this.uploadFileToServer(fileInfo);
-      },
-      fail: (err) => {
-        console.error('获取文件信息失败：', err);
-        app.showError('获取文件信息失败');
+        return;
       }
+      
+      // token有效，继续处理文件
+      // 获取文件信息
+      wx.getFileInfo({
+        filePath: filePath,
+        success: (res) => {
+          const fileType = fileType || this.getFileTypeFromPath(filePath);
+          const fileInfo = {
+            path: filePath,
+            name: fileName || this.getFileNameFromPath(filePath),
+            size: fileSize || res.size,
+            type: fileType,
+            uploaded: false,
+            serverId: null,
+            // 预处理显示数据
+            icon: this.getFileIcon(fileType),
+            sizeText: this.formatFileSize(fileSize || res.size),
+            typeName: this.getFileTypeName(fileType),
+            isImage: this.isImageFile(fileType)
+          };
+
+          this.setData({
+            fileInfo: fileInfo,
+            showPreview: true
+          });
+
+          // 生成本地预览
+          this.generateLocalPreview(fileInfo);
+
+          // 立即上传文件到服务器
+          this.uploadFileToServer(fileInfo);
+        },
+        fail: (err) => {
+          console.error('获取文件信息失败：', err);
+          app.showError('获取文件信息失败');
+        }
+      });
     });
   },
 

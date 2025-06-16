@@ -24,7 +24,11 @@ Page({
   onShow() {
     console.log('订单页面显示');
     // 刷新订单列表
-    this.checkLoginAndLoadOrders();
+    if (app.globalData.isLogin && app.globalData.userInfo) {
+      this.loadOrderList(true); // 传入true参数强制刷新
+    } else {
+      this.checkLoginAndLoadOrders();
+    }
   },
 
   /**

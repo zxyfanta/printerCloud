@@ -321,5 +321,32 @@ App({
       title: title,
       icon: 'none'
     });
+  },
+
+  /**
+   * 验证token是否有效
+   * @returns {Promise<boolean>} 返回Promise，解析为token是否有效
+   */
+  validateToken() {
+    return new Promise((resolve) => {
+      // 如果没有token，直接返回false
+      if (!this.globalData.token) {
+        resolve(false);
+        return;
+      }
+
+      // 发送请求验证token
+      this.request({
+        url: '/auth/userinfo',
+        method: 'GET'
+      }).then(() => {
+        // 请求成功，token有效
+        resolve(true);
+      }).catch(() => {
+        // 请求失败，token无效，清除登录状态
+        this.logout();
+        resolve(false);
+      });
+    });
   }
 });

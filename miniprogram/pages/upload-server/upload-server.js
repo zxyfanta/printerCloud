@@ -94,50 +94,62 @@ Page({
    * 开始上传流程
    */
   startUpload() {
-    // 设置上传状态
-    this.setData({
-      uploading: true,
-      uploadSuccess: false,
-      uploadError: false,
-      progress: 0,
-      retryCount: 0 // 重置重试计数
-    });
-
-    // 创建订单
-    this.createOrder().then(orderId => {
-      // 订单创建成功
-      this.setData({
-        orderId,
-        uploading: false,
-        uploadSuccess: true
-      });
-      
-      // 显示成功提示
-      app.showSuccess('订单已成功创建');
-      
-      // 清理临时数据
-      app.globalData.tempFileInfo = null;
-      app.globalData.tempPrintConfig = null;
-      app.globalData.tempOrderData = null;
-      
-      // 延迟跳转到订单详情页
-      setTimeout(() => {
-        wx.redirectTo({
-          url: `/pages/order-detail/order-detail?id=${orderId}`
+    // 先验证token是否有效
+    app.validateToken().then(isValid => {
+      if (!isValid) {
+        // token无效，跳转到登录页面
+        wx.navigateTo({
+          url: '/pages/login/login?redirect=upload-server'
         });
-      }, 2000);
+        return;
+      }
       
-    }).catch(err => {
-      console.error('订单创建失败：', err);
-      
+      // token有效，继续上传流程
+      // 设置上传状态
       this.setData({
-        uploading: false,
-        uploadError: true,
-        errorMessage: this.getErrorMessage(err)
+        uploading: true,
+        uploadSuccess: false,
+        uploadError: false,
+        progress: 0,
+        retryCount: 0 // 重置重试计数
       });
-      
-      // 显示错误提示
-      app.showError('订单创建失败，请重试');
+
+      // 创建订单
+      this.createOrder().then(orderId => {
+        // 订单创建成功
+        this.setData({
+          orderId,
+          uploading: false,
+          uploadSuccess: true
+        });
+        
+        // 显示成功提示
+        app.showSuccess('订单已成功创建');
+        
+        // 清理临时数据
+        app.globalData.tempFileInfo = null;
+        app.globalData.tempPrintConfig = null;
+        app.globalData.tempOrderData = null;
+        
+        // 延迟跳转到订单详情页
+        setTimeout(() => {
+          wx.redirectTo({
+            url: `/pages/order-detail/order-detail?id=${orderId}`
+          });
+        }, 2000);
+        
+      }).catch(err => {
+        console.error('订单创建失败：', err);
+        
+        this.setData({
+          uploading: false,
+          uploadError: true,
+          errorMessage: this.getErrorMessage(err)
+        });
+        
+        // 显示错误提示
+        app.showError('订单创建失败，请重试');
+      });
     });
   },
 
