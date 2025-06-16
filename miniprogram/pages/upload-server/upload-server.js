@@ -39,12 +39,8 @@ Page({
     const envConfig = app.globalData.envConfig || {};
     const isDev = envConfig.env === 'development';
     
-    // 在开发环境下默认使用模拟上传
-    this.setData({
-      useSimulatedUpload: isDev
-    });
-    
-    console.log(`当前环境: ${isDev ? '开发环境' : '生产环境'}, 使用${isDev ? '模拟' : '真实'}上传`);
+    // 记录环境信息，但不再使用模拟上传
+    console.log(`当前环境: ${isDev ? '开发环境' : '生产环境'}`);
   },
 
   /**
@@ -94,48 +90,45 @@ Page({
   /**
    * 开始上传文件
    */
+  /**
+   * 开始上传流程
+   */
   startUpload() {
-    // 重置上传状态
+    // 设置上传状态
     this.setData({
       uploading: true,
-      uploadProgress: 0,
       uploadSuccess: false,
       uploadError: false,
-      errorMessage: ''
+      progress: 0,
+      retryCount: 0 // 重置重试计数
     });
 
     // 创建订单
     this.createOrder().then(orderId => {
-      this.setData({ orderId });
-      
-      // 根据环境选择上传方式
-      if (this.data.useSimulatedUpload) {
-        return this.simulateUpload();
-      } else {
-        return this.uploadFileToServer();
-      }
-    }).then(() => {
+      // 订单创建成功
       this.setData({
+        orderId,
         uploading: false,
-        uploadSuccess: true,
-        retryCount: 0 // 重置重试计数
+        uploadSuccess: true
       });
       
-      app.showSuccess('文件上传成功，订单已提交');
+      // 显示成功提示
+      app.showSuccess('订单已成功创建');
       
       // 清理临时数据
-      app.globalData.tempOrderData = null;
       app.globalData.tempFileInfo = null;
+      app.globalData.tempPrintConfig = null;
+      app.globalData.tempOrderData = null;
       
-      // 延迟跳转到订单详情
+      // 延迟跳转到订单详情页
       setTimeout(() => {
         wx.redirectTo({
-          url: `/pages/order-detail/order-detail?id=${this.data.orderId}`
+          url: `/pages/order-detail/order-detail?id=${orderId}`
         });
       }, 2000);
       
     }).catch(err => {
-      console.error('上传失败：', err);
+      console.error('订单创建失败：', err);
       
       this.setData({
         uploading: false,
@@ -144,7 +137,7 @@ Page({
       });
       
       // 显示错误提示
-      app.showError('上传失败，请重试');
+      app.showError('订单创建失败，请重试');
     });
   },
 
@@ -183,7 +176,7 @@ Page({
     }
     
     // 默认错误信息
-    return err.message || '上传过程中出现错误，请重试';
+    return err.message || '订单创建过程中出现错误，请重试';
   },
 
   /**
@@ -213,7 +206,8 @@ Page({
         isDoubleSide: orderData.printConfig.isDoubleSide || false,
         paperSize: orderData.printConfig.paperSize || 'A4',
         remark: orderData.printConfig.remark || '',
-        amount: (orderData.totalAmount || '0').toString()
+        amount: (orderData.totalAmount || '0').toString(),
+        fileId: orderData.fileInfo.serverId || null // 添加文件ID
       };
 
       console.log('发送订单请求:', orderRequest);
@@ -223,9 +217,12 @@ Page({
         method: 'POST',
         data: orderRequest
       }).then(res => {
-        if (res.code === 200) {
-          resolve(res.data.orderId || Date.now()); // 如果后端没返回ID，使用时间戳
+        // 检查响应中的success字段
+        if (res.success === true) {
+          // 订单创建成功
+          resolve(res.data.id || Date.now()); // 使用订单ID或时间戳
         } else {
+          // 订单创建失败
           reject(new Error(res.message || '创建订单失败'));
         }
       }).catch(reject);
@@ -236,86 +233,18 @@ Page({
    * 模拟上传文件（开发环境使用）
    */
   simulateUpload() {
-    return new Promise((resolve, reject) => {
-      console.log('使用模拟上传模式');
-      
-      // 模拟上传进度
-      let progress = 0;
-      const timer = setInterval(() => {
-        progress += Math.random() * 20;
-        if (progress >= 100) {
-          progress = 100;
-          clearInterval(timer);
-          resolve();
-        }
-        
-        this.setData({
-          uploadProgress: Math.floor(progress)
-        });
-      }, 200);
-    });
+    // 此方法已不再使用，保留方法签名以便将来参考
+    console.log('模拟上传方法已弃用');
+    return Promise.resolve();
   },
 
   /**
    * 上传文件到服务器（生产环境使用）
    */
   uploadFileToServer() {
-    return new Promise((resolve, reject) => {
-      const { fileInfo } = this.data;
-      
-      if (!fileInfo || !fileInfo.path) {
-        reject(new Error('文件信息不完整'));
-        return;
-      }
-      
-      console.log('开始真实文件上传');
-      
-      // 检查文件大小
-      if (fileInfo.size > 50 * 1024 * 1024) { // 50MB
-        reject(new Error('文件大小超过50MB限制'));
-        return;
-      }
-      
-      const uploadTask = wx.uploadFile({
-        url: app.globalData.baseUrl + '/file/upload',
-        filePath: fileInfo.path,
-        name: 'file',
-        formData: {
-          fileName: fileInfo.name,
-          orderId: this.data.orderId
-        },
-        header: {
-          'Authorization': app.globalData.token ? `Bearer ${app.globalData.token}` : ''
-        },
-        success: (res) => {
-          if (res.statusCode === 200) {
-            try {
-              const data = JSON.parse(res.data);
-              if (data.code === 200) {
-                resolve(data.data);
-              } else {
-                reject(new Error(data.message || '服务器处理文件失败'));
-              }
-            } catch (e) {
-              reject(new Error('解析服务器响应失败'));
-            }
-          } else {
-            reject(new Error(`上传失败：HTTP ${res.statusCode}`));
-          }
-        },
-        fail: (err) => {
-          console.error('文件上传失败：', err);
-          reject(err);
-        }
-      });
-
-      // 监听上传进度
-      uploadTask.onProgressUpdate((res) => {
-        this.setData({
-          uploadProgress: res.progress
-        });
-      });
-    });
+    // 此方法已不再使用，保留方法签名以便将来参考
+    console.log('文件上传方法已弃用');
+    return Promise.resolve();
   },
 
   /**
@@ -359,10 +288,8 @@ Page({
     });
   },
 
-
-
   /**
-   * 重试上传
+   * 重试创建订单
    */
   retryUpload() {
     // 增加重试计数
@@ -375,8 +302,8 @@ Page({
       return;
     }
     
-    // 开始重试上传
-    console.log(`开始第${retryCount}次重试上传`);
+    // 开始重试创建订单
+    console.log(`开始第${retryCount}次重试创建订单`);
     this.startUpload();
   }
 });

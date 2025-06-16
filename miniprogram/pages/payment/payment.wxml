@@ -43,14 +43,14 @@
         <view class="payment-method active">
           <view class="method-icon">💳</view>
           <view class="method-info">
-            <text class="method-name">{{useSimulatedPayment ? '模拟支付' : '微信支付'}}</text>
-            <text class="method-desc">{{useSimulatedPayment ? '开发环境模拟支付功能' : '安全快捷的支付方式'}}</text>
+            <text class="method-name">微信支付（沙盒环境）</text>
+            <text class="method-desc">安全快捷的支付方式</text>
           </view>
           <view class="method-check">✓</view>
         </view>
       </view>
-      <view class="dev-mode-tip" wx:if="{{useSimulatedPayment}}">
-        <text>当前处于开发环境，使用模拟支付功能</text>
+      <view class="dev-mode-tip">
+        <text>当前处于沙盒支付环境，仅用于测试</text>
       </view>
     </view>
 

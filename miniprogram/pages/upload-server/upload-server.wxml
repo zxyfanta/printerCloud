@@ -2,8 +2,8 @@
 <view class="page">
   <!-- 页面标题 -->
   <view class="page-header">
-    <text class="page-title">文件上传</text>
-    <text class="page-subtitle">正在将文件上传到服务器</text>
+    <text class="page-title">订单提交</text>
+    <text class="page-subtitle">正在创建打印订单</text>
   </view>
 
   <view class="content">
@@ -13,21 +13,21 @@
         <view class="status-icon {{uploadSuccess ? 'success' : (uploadError ? 'error' : (uploading ? 'uploading' : 'waiting'))}}">
           <text class="icon-text" wx:if="{{uploadSuccess}}">✓</text>
           <text class="icon-text" wx:elif="{{uploadError}}">✗</text>
-          <text class="icon-text" wx:elif="{{uploading}}">📤</text>
+          <text class="icon-text" wx:elif="{{uploading}}">📋</text>
           <text class="icon-text" wx:else>⏳</text>
         </view>
       </view>
       
       <view class="status-content">
-        <text class="status-title" wx:if="{{uploadSuccess}}">上传完成</text>
-        <text class="status-title" wx:elif="{{uploadError}}">上传失败</text>
-        <text class="status-title" wx:elif="{{uploading}}">正在上传</text>
-        <text class="status-title" wx:else>准备上传</text>
+        <text class="status-title" wx:if="{{uploadSuccess}}">订单已创建</text>
+        <text class="status-title" wx:elif="{{uploadError}}">订单创建失败</text>
+        <text class="status-title" wx:elif="{{uploading}}">正在创建订单</text>
+        <text class="status-title" wx:else>准备创建订单</text>
         
-        <text class="status-desc" wx:if="{{uploadSuccess}}">文件已成功上传，订单已提交处理</text>
-        <text class="status-desc" wx:elif="{{uploadError}}">{{errorMessage || '上传过程中出现错误，请重试'}}</text>
-        <text class="status-desc" wx:elif="{{uploading}}">请保持网络连接，正在上传文件到服务器</text>
-        <text class="status-desc" wx:else>即将开始上传文件</text>
+        <text class="status-desc" wx:if="{{uploadSuccess}}">订单已成功创建，即将跳转到订单详情</text>
+        <text class="status-desc" wx:elif="{{uploadError}}">{{errorMessage || '订单创建过程中出现错误，请重试'}}</text>
+        <text class="status-desc" wx:elif="{{uploading}}">请保持网络连接，正在创建打印订单</text>
+        <text class="status-desc" wx:else>即将开始创建订单</text>
       </view>
     </view>
 
@@ -49,18 +49,12 @@
     </view>
 
     <!-- 开发环境提示 -->
-    <view class="dev-mode-card" wx:if="{{useSimulatedUpload}}">
-      <view class="dev-mode-icon">🔧</view>
-      <view class="dev-mode-content">
-        <text class="dev-mode-title">开发模式</text>
-        <text class="dev-mode-desc">当前使用模拟上传，文件不会真正上传到服务器</text>
-      </view>
-    </view>
+    <!-- 已移除开发模式卡片，因为不再使用模拟上传 -->
 
     <!-- 上传进度 -->
     <view class="progress-card" wx:if="{{uploading}}">
       <view class="card-header">
-        <text class="card-title">上传进度</text>
+        <text class="card-title">处理进度</text>
         <text class="progress-text">{{uploadProgress}}%</text>
       </view>
       
@@ -69,7 +63,7 @@
       </view>
       
       <view class="progress-tips">
-        <text class="tip-text">上传过程中请勿关闭页面</text>
+        <text class="tip-text">订单创建中，请勿关闭页面</text>
       </view>
     </view>
 
@@ -77,8 +71,8 @@
     <view class="error-card" wx:if="{{uploadError}}">
       <view class="error-content">
         <view class="error-icon">❌</view>
-        <text class="error-title">上传失败</text>
-        <text class="error-desc">{{errorMessage || '文件上传过程中出现错误'}}</text>
+        <text class="error-title">订单创建失败</text>
+        <text class="error-desc">{{errorMessage || '订单创建过程中出现错误'}}</text>
         
         <view class="error-tips">
           <view class="tip-item">
@@ -87,7 +81,7 @@
           </view>
           <view class="tip-item">
             <text class="tip-dot">•</text>
-            <text class="tip-text">文件大小不应超过50MB</text>
+            <text class="tip-text">请确认订单信息是否完整</text>
           </view>
           <view class="tip-item">
             <text class="tip-dot">•</text>
@@ -125,7 +119,7 @@
       <view class="tip-list">
         <view class="tip-item">
           <text class="tip-dot">•</text>
-          <text class="tip-text">文件传输采用SSL加密保护</text>
+          <text class="tip-text">订单信息采用SSL加密保护</text>
         </view>
         <view class="tip-item">
           <text class="tip-dot">•</text>
@@ -154,7 +148,7 @@
         <text class="btn-text">返回首页</text>
       </button>
       <button class="btn primary" bindtap="retryUpload">
-        <text class="btn-text">重试上传</text>
+        <text class="btn-text">重新创建</text>
       </button>
     </view>
   </view>

@@ -269,10 +269,14 @@ Page({
           fileInfo: updatedFileInfo
         });
         
+        // 更新全局的临时文件信息
+        app.globalData.tempFileInfo = updatedFileInfo;
+        
         // 如果文件解析完成，停止轮询
         if (fileInfo.status === 3) { // 3-解析成功
           clearInterval(pollingTimer);
           console.log('文件解析完成，停止轮询');
+          console.log('更新后的文件信息：', updatedFileInfo);
         }
         
         // 如果文件解析失败，停止轮询

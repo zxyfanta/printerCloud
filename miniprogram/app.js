@@ -226,11 +226,15 @@ App({
           if (res.statusCode === 200) {
             resolve(res.data);
           } else if (res.statusCode === 401) {
-            // 未授权，清除登录信息
+            // 未授权，清除登录信息并自动触发登录
             this.logout();
-            wx.showToast({
-              title: '请重新登录',
-              icon: 'none'
+            // 保存当前页面路径
+            const pages = getCurrentPages();
+            const currentPage = pages[pages.length - 1];
+            const url = '/' + currentPage.route;
+            // 跳转到登录页
+            wx.navigateTo({
+              url: '/pages/login/login'
             });
             reject(new Error('未授权'));
           } else {

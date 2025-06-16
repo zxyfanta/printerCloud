@@ -32,10 +32,9 @@ Page({
    * 检查支付模式
    */
   checkPaymentMode() {
-    // 在开发环境中使用模拟支付
-    const useSimulatedPayment = app.globalData.currentEnv === 'dev';
-    this.setData({ useSimulatedPayment });
-    console.log('当前支付模式：', useSimulatedPayment ? '模拟支付' : '实际支付');
+    // 移除模拟支付，始终使用沙盒支付
+    this.setData({ useSimulatedPayment: false });
+    console.log('当前支付模式：沙盒支付');
   },
 
   /**
@@ -88,18 +87,13 @@ Page({
     
     this.setData({ paying: true });
     
-    // 开发环境使用模拟支付
-    if (this.data.useSimulatedPayment) {
-      this.simulatePayment();
-      return;
-    }
-    
-    // 创建支付订单
+    // 创建支付订单，添加沙盒环境参数
     app.request({
       url: '/pay/create',
       method: 'POST',
       data: {
-        orderId: this.data.orderId
+        orderId: this.data.orderId,
+        sandbox: true  // 使用沙盒环境
       }
     }).then(res => {
       if (res.code === 200) {

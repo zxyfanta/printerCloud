@@ -38,7 +38,7 @@ Page({
       return;
     }
     
-    this.loadOrders();
+    this.loadOrderList();
   },
 
 
