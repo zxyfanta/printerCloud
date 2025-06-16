@@ -288,4 +288,120 @@ public class FileController {
         
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * 获取文件预览信息
+     */
+    @GetMapping("/preview/{id}")
+    public ResponseEntity<Map<String, Object>> getFilePreview(
+            @RequestHeader("Authorization") String token,
+            @PathVariable Long id) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            // 移除Bearer前缀
+            if (token.startsWith("Bearer ")) {
+                token = token.substring(7);
+            }
+            
+            User currentUser = userService.validateTokenAndGetUser(token);
+            if (currentUser == null) {
+                response.put("code", 401);
+                response.put("message", "token无效");
+                return ResponseEntity.ok(response);
+            }
+            
+            PrintFile printFile = fileService.getFileById(id);
+            if (printFile == null) {
+                response.put("code", 404);
+                response.put("message", "文件不存在");
+                return ResponseEntity.ok(response);
+            }
+            
+            // 权限检查：用户只能查看自己的文件，管理员可以查看所有文件
+            if (!currentUser.isAdmin() && !printFile.getUserId().equals(currentUser.getId())) {
+                response.put("code", 403);
+                response.put("message", "无权限访问此文件");
+                return ResponseEntity.ok(response);
+            }
+            
+            // 构建预览信息
+            Map<String, Object> previewInfo = new HashMap<>();
+            previewInfo.put("id", printFile.getId());
+            previewInfo.put("fileName", printFile.getOriginalName());
+            previewInfo.put("fileType", printFile.getFileType());
+            previewInfo.put("pageCount", printFile.getPageCount());
+            
+            // 检查是否有预览路径
+            if (printFile.getPreviewPath() != null && !printFile.getPreviewPath().isEmpty()) {
+                // 构建预览URL
+                String previewUrl = "/api/file/preview-content/" + printFile.getId();
+                previewInfo.put("previewUrl", previewUrl);
+                previewInfo.put("previewAvailable", true);
+            } else {
+                previewInfo.put("previewAvailable", false);
+                previewInfo.put("previewMessage", "预览文件正在生成中或不可用");
+            }
+            
+            response.put("code", 200);
+            response.put("message", "获取成功");
+            response.put("data", previewInfo);
+            
+        } catch (Exception e) {
+            response.put("code", 500);
+            response.put("message", "获取预览信息失败: " + e.getMessage());
+        }
+        
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 获取文件预览内容
+     */
+    @GetMapping("/preview-content/{id}")
+    public ResponseEntity<Resource> getFilePreviewContent(
+            @RequestHeader("Authorization") String token,
+            @PathVariable Long id) {
+        try {
+            // 移除Bearer前缀
+            if (token.startsWith("Bearer ")) {
+                token = token.substring(7);
+            }
+            
+            User currentUser = userService.validateTokenAndGetUser(token);
+            if (currentUser == null) {
+                return ResponseEntity.status(401).build();
+            }
+            
+            PrintFile printFile = fileService.getFileById(id);
+            if (printFile == null) {
+                return ResponseEntity.notFound().build();
+            }
+            
+            // 权限检查：用户只能查看自己的文件，管理员可以查看所有文件
+            if (!currentUser.isAdmin() && !printFile.getUserId().equals(currentUser.getId())) {
+                return ResponseEntity.status(403).build();
+            }
+            
+            // 检查是否有预览路径
+            if (printFile.getPreviewPath() == null || printFile.getPreviewPath().isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+            
+            // 获取预览文件资源
+            Resource resource = fileService.getFileResource(printFile.getPreviewPath());
+            if (resource == null) {
+                return ResponseEntity.notFound().build();
+            }
+            
+            // 设置响应头
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=preview.pdf")
+                    .body(resource);
+                    
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
+    }
 }

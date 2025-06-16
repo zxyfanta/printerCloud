@@ -38,6 +38,9 @@ public class FileService {
 
     @Autowired
     private FileParseService fileParseService;
+    
+    @Autowired
+    private PdfConversionService pdfConversionService;
 
     @Value("${file.upload.path}")
     private String uploadPath;
@@ -91,6 +94,9 @@ public class FileService {
 
         // 异步解析文件信息（页数等）
         fileParseService.parseFileAsync(savedFile.getId());
+        
+        // 异步将非图片文件转换为PDF
+        pdfConversionService.convertToPdfAsync(savedFile.getId());
 
         return savedFile;
     }
@@ -224,5 +230,19 @@ public class FileService {
      */
     public long getUserFileTotalSize(Long userId) {
         return fileRepository.sumFileSizeByUserId(userId);
+    }
+
+    /**
+     * 获取文件资源
+     */
+    public Resource getFileResource(String filePath) throws MalformedURLException {
+        Path path = Paths.get(filePath);
+        Resource resource = new UrlResource(path.toUri());
+        
+        if (resource.exists() && resource.isReadable()) {
+            return resource;
+        } else {
+            return null;
+        }
     }
 }
