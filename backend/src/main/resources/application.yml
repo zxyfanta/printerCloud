@@ -27,6 +27,12 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        
+  # Spring Servlet Multipart配置
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
 
 # JWT配置
 jwt:

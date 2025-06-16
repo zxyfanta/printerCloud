@@ -11,6 +11,7 @@ import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import javax.crypto.SecretKey;
 
 /**
  * JWT工具类
@@ -30,7 +31,7 @@ public class JwtUtil {
     /**
      * 获取签名密钥
      */
-    private Key getSigningKey() {
+    private SecretKey getSigningKey() {
         byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
     }
