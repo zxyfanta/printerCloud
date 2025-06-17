@@ -1,8 +1,8 @@
 package com.printercloud.controller;
 
+import com.printercloud.common.R;
 import com.printercloud.service.WebSocketNotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -55,70 +55,52 @@ public class WebSocketTestController {
          * 发送测试通知
          */
         @PostMapping("/test-notification")
-        public ResponseEntity<Map<String, Object>> sendTestNotification() {
-            Map<String, Object> response = new HashMap<>();
-            
+        public R<String> sendTestNotification() {
             try {
                 // 发送测试系统通知
                 notificationService.sendSystemNotification(
-                    "WebSocket测试", 
-                    "这是一条测试通知，用于验证WebSocket连接是否正常工作", 
+                    "WebSocket测试",
+                    "这是一条测试通知，用于验证WebSocket连接是否正常工作",
                     "INFO"
                 );
 
-                response.put("code", 200);
-                response.put("success", true);
-                response.put("message", "测试通知已发送");
-                
+                return R.ok("测试通知已发送");
             } catch (Exception e) {
-                response.put("code", 500);
-                response.put("success", false);
-                response.put("message", "发送测试通知失败: " + e.getMessage());
+                return R.fail("发送测试通知失败: " + e.getMessage());
             }
-            
-            return ResponseEntity.ok(response);
         }
 
         /**
          * 获取WebSocket连接状态
          */
         @GetMapping("/status")
-        public ResponseEntity<Map<String, Object>> getWebSocketStatus() {
-            Map<String, Object> response = new HashMap<>();
-            
+        public R<Map<String, Object>> getWebSocketStatus() {
             try {
-                response.put("code", 200);
-                response.put("success", true);
-                response.put("message", "WebSocket服务正常运行");
-                response.put("timestamp", LocalDateTime.now().toString());
-                response.put("endpoints", new String[]{
+                Map<String, Object> data = new HashMap<>();
+                data.put("timestamp", LocalDateTime.now().toString());
+                data.put("endpoints", new String[]{
                     "/api/ws - WebSocket连接端点",
                     "/topic/newOrders - 新订单通知",
                     "/topic/orderUpdates - 订单状态更新",
                     "/topic/system - 系统通知",
                     "/topic/test - 测试消息"
                 });
-                
+
+                return R.ok(data, "WebSocket服务正常运行");
             } catch (Exception e) {
-                response.put("code", 500);
-                response.put("success", false);
-                response.put("message", "获取WebSocket状态失败: " + e.getMessage());
+                return R.fail("获取WebSocket状态失败: " + e.getMessage());
             }
-            
-            return ResponseEntity.ok(response);
         }
 
         /**
          * 发送自定义消息到指定主题
          */
         @PostMapping("/send-message")
-        public ResponseEntity<Map<String, Object>> sendCustomMessage(
+        public R<String> sendCustomMessage(
                 @RequestParam String topic,
                 @RequestParam String title,
                 @RequestParam String message) {
-            
-            Map<String, Object> response = new HashMap<>();
-            
+
             try {
                 Map<String, Object> notification = new HashMap<>();
                 notification.put("type", "CUSTOM");
@@ -128,17 +110,10 @@ public class WebSocketTestController {
 
                 messagingTemplate.convertAndSend("/topic/" + topic, notification);
 
-                response.put("code", 200);
-                response.put("success", true);
-                response.put("message", "自定义消息已发送到主题: " + topic);
-                
+                return R.ok("自定义消息已发送到主题: " + topic);
             } catch (Exception e) {
-                response.put("code", 500);
-                response.put("success", false);
-                response.put("message", "发送自定义消息失败: " + e.getMessage());
+                return R.fail("发送自定义消息失败: " + e.getMessage());
             }
-            
-            return ResponseEntity.ok(response);
         }
     }
 }

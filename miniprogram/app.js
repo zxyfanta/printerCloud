@@ -171,25 +171,28 @@ App({
               }
             }).then(result => {
               console.log('后端登录响应：', result);
-              console.log('result.token:', result.token);
-              console.log('result.userInfo:', result.userInfo);
-              if (result.code === 200) {
-                // 直接从result获取数据，不使用result.data
-                const token = result.token;
-                const userInfo = result.userInfo;
-                
+              console.log('result.data:', result.data);
+              if (result.code === 200 && result.data) {
+                // 从result.data中获取token和userInfo
+                const token = result.data.token;
+                const userInfo = result.data.userInfo;
+
+                console.log('解析的token:', token);
+                console.log('解析的userInfo:', userInfo);
+
                 if (token && userInfo) {
                   self.globalData.token = token;
                   self.globalData.userInfo = userInfo;
                   self.globalData.isLogin = true;
-                  
+
                   // 保存到本地存储
                   wx.setStorageSync('token', token);
                   wx.setStorageSync('userInfo', userInfo);
-                  
+
                   console.log('登录成功，用户信息：', userInfo);
                   resolve({token: token, userInfo: userInfo});
                 } else {
+                  console.error('登录响应数据格式错误，token或userInfo为空');
                   reject(new Error('登录响应数据格式错误'));
                 }
               } else {
@@ -265,6 +268,10 @@ App({
           if (res.statusCode === 200) {
             const data = JSON.parse(res.data);
             resolve(data);
+          } else if (res.statusCode === 401) {
+            // 未授权，token可能已过期
+            this.logout();
+            reject(new Error('登录已过期，请重新登录'));
           } else {
             reject(new Error(`上传失败：${res.statusCode}`));
           }
@@ -329,21 +336,39 @@ App({
    */
   validateToken() {
     return new Promise((resolve) => {
+      console.log('开始验证token...');
+      console.log('当前token:', this.globalData.token ? this.globalData.token.substring(0, 50) + '...' : 'null');
+      console.log('当前isLogin状态:', this.globalData.isLogin);
+      console.log('当前userInfo:', this.globalData.userInfo);
+
       // 如果没有token，直接返回false
       if (!this.globalData.token) {
+        console.log('token为空，验证失败');
         resolve(false);
         return;
       }
 
       // 发送请求验证token
+      console.log('发送请求验证token...');
       this.request({
         url: '/auth/userinfo',
         method: 'GET'
-      }).then(() => {
-        // 请求成功，token有效
-        resolve(true);
-      }).catch(() => {
+      }).then((res) => {
+        // 检查响应体中的code字段
+        console.log('token验证响应:', res);
+        if (res.code === 200) {
+          // 请求成功，token有效
+          console.log('token验证成功');
+          resolve(true);
+        } else {
+          // 响应中的code不是200，token无效
+          console.log('token验证失败，响应code:', res.code);
+          this.logout();
+          resolve(false);
+        }
+      }).catch((err) => {
         // 请求失败，token无效，清除登录状态
+        console.error('token验证请求失败，错误:', err);
         this.logout();
         resolve(false);
       });

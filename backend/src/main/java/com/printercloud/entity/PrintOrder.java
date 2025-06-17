@@ -81,6 +81,9 @@ public class PrintOrder {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updateTime;
 
+    @Column(name = "file_id")
+    private Long fileId; // 关联的文件ID
+
     // 构造函数
     public PrintOrder() {
         this.createTime = LocalDateTime.now();
@@ -247,6 +250,14 @@ public class PrintOrder {
 
     public void setUpdateTime(LocalDateTime updateTime) {
         this.updateTime = updateTime;
+    }
+
+    public Long getFileId() {
+        return fileId;
+    }
+
+    public void setFileId(Long fileId) {
+        this.fileId = fileId;
     }
 
     /**

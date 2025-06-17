@@ -3,8 +3,8 @@
   <!-- 用户信息 -->
   <view class="user-section">
     <view class="user-info" wx:if="{{userInfo}}">
-      <view class="user-avatar" wx:if="{{userInfo.avatarUrl}}">
-        <image src="{{userInfo.avatarUrl}}" mode="aspectFill"></image>
+      <view class="user-avatar" wx:if="{{userInfo.avatarUrl && !avatarLoadError}}">
+        <image src="{{userInfo.avatarUrl}}" mode="aspectFill" binderror="onAvatarError"></image>
       </view>
       <view class="user-avatar default-avatar" wx:else>
         <text>👤</text>

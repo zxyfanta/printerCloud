@@ -195,16 +195,32 @@ Page({
    * 创建订单
    */
   createOrder() {
-    // 检查登录状态
-    if (!app.globalData.isLogin || !app.globalData.userInfo) {
-      wx.navigateTo({
-        url: '/pages/login/login'
-      });
-      return;
-    }
-
     return new Promise((resolve, reject) => {
-      const { orderData } = this.data;
+      // 再次验证token（因为从开始上传到创建订单可能有时间间隔）
+      app.validateToken().then(isValid => {
+        if (!isValid) {
+          // token无效，跳转到登录页面
+          wx.navigateTo({
+            url: '/pages/login/login?redirect=upload-server'
+          });
+          reject(new Error('登录已过期，请重新登录'));
+          return;
+        }
+
+        // token有效，继续创建订单
+        this.performCreateOrder(resolve, reject);
+      }).catch(err => {
+        console.error('Token验证失败:', err);
+        reject(new Error('登录验证失败，请重新登录'));
+      });
+    });
+  },
+
+  /**
+   * 执行创建订单
+   */
+  performCreateOrder(resolve, reject) {
+    const { orderData } = this.data;
       
       const orderRequest = {
         userId: app.globalData.userInfo.id,
@@ -218,7 +234,7 @@ Page({
         isDoubleSide: orderData.printConfig.isDoubleSide || false,
         paperSize: orderData.printConfig.paperSize || 'A4',
         remark: orderData.printConfig.remark || '',
-        amount: (orderData.totalAmount || '0').toString(),
+        amount: parseFloat(orderData.totalAmount || '0'), // 修复：转换为数字类型
         fileId: orderData.fileInfo.serverId || null // 添加文件ID
       };
 
@@ -229,16 +245,37 @@ Page({
         method: 'POST',
         data: orderRequest
       }).then(res => {
-        // 检查响应中的success字段
-        if (res.success === true) {
+        console.log('订单创建响应:', res);
+
+        // 检查响应中的code和success字段
+        if (res.code === 200 && res.success === true) {
           // 订单创建成功
-          resolve(res.data.id || Date.now()); // 使用订单ID或时间戳
+          const orderId = res.data?.id || Date.now();
+          console.log('订单创建成功，订单ID:', orderId);
+          resolve(orderId);
         } else {
-          // 订单创建失败
-          reject(new Error(res.message || '创建订单失败'));
+          // 订单创建失败，提供详细错误信息
+          const errorMsg = res.message || '创建订单失败';
+          console.error('订单创建失败:', errorMsg);
+          reject(new Error(errorMsg));
         }
-      }).catch(reject);
-    });
+      }).catch(err => {
+        console.error('订单创建请求失败:', err);
+        // 提供更友好的错误信息
+        let errorMessage = '创建订单失败';
+        if (err.message) {
+          if (err.message.includes('网络')) {
+            errorMessage = '网络连接失败，请检查网络后重试';
+          } else if (err.message.includes('401')) {
+            errorMessage = '登录已过期，请重新登录';
+          } else if (err.message.includes('400')) {
+            errorMessage = '订单信息有误，请检查后重试';
+          } else {
+            errorMessage = err.message;
+          }
+        }
+        reject(new Error(errorMessage));
+      });
   },
 
   /**

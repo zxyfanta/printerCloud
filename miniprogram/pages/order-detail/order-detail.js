@@ -1,5 +1,6 @@
 // pages/order-detail/order-detail.js
 const app = getApp();
+const dateUtil = require('../../utils/dateUtil');
 
 Page({
   /**
@@ -99,13 +100,13 @@ Page({
   formatOrderInfo(order) {
     // 格式化时间
     if (order.createTime) {
-      order.createTime = this.formatTime(order.createTime);
+      order.createTime = dateUtil.formatStandardTime(order.createTime);
     }
     if (order.payTime) {
-      order.payTime = this.formatTime(order.payTime);
+      order.payTime = dateUtil.formatStandardTime(order.payTime);
     }
     if (order.finishTime) {
-      order.finishTime = this.formatTime(order.finishTime);
+      order.finishTime = dateUtil.formatStandardTime(order.finishTime);
     }
     
     // 格式化金额
@@ -122,27 +123,7 @@ Page({
     return order;
   },
 
-  /**
-   * 格式化时间
-   */
-  formatTime(timeStr) {
-    if (!timeStr) return '';
-    
-    try {
-      const date = new Date(timeStr);
-      return `${date.getFullYear()}-${this.padZero(date.getMonth() + 1)}-${this.padZero(date.getDate())} ${this.padZero(date.getHours())}:${this.padZero(date.getMinutes())}`;
-    } catch (error) {
-      console.error('时间格式化错误：', error);
-      return timeStr;
-    }
-  },
 
-  /**
-   * 数字补零
-   */
-  padZero(num) {
-    return num < 10 ? '0' + num : num;
-  },
 
   /**
    * 获取状态样式类

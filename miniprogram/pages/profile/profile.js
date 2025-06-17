@@ -7,7 +7,8 @@ Page({
     orderStats: {},
     showPriceModal: false,
     showHelpModal: false,
-    showAboutModal: false
+    showAboutModal: false,
+    avatarLoadError: false
   },
 
   onLoad() {
@@ -54,14 +55,24 @@ Page({
    * 加载订单统计
    */
   loadOrderStats() {
+    // 获取当前用户的订单统计
+    const userId = app.globalData.userInfo?.id;
+    if (!userId) {
+      console.log('用户ID不存在，跳过加载订单统计');
+      return;
+    }
+
     app.request({
-      url: '/order/stats',
+      url: `/orders/statistics?userId=${userId}`,
       method: 'GET'
     }).then(res => {
-      if (res.code === 200) {
+      console.log('订单统计响应:', res);
+      if (res.success === true) {
         this.setData({
           orderStats: res.data
         });
+      } else {
+        console.error('获取订单统计失败:', res.message);
       }
     }).catch(err => {
       console.error('加载订单统计失败：', err);
@@ -252,6 +263,16 @@ Page({
           app.showSuccess('已退出登录');
         }
       }
+    });
+  },
+
+  /**
+   * 头像加载错误处理
+   */
+  onAvatarError() {
+    console.log('头像加载失败，使用默认头像');
+    this.setData({
+      avatarLoadError: true
     });
   },
 

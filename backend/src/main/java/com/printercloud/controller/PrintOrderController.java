@@ -1,14 +1,15 @@
 package com.printercloud.controller;
 
+import com.printercloud.common.R;
 import com.printercloud.dto.CreateOrderRequest;
 import com.printercloud.dto.OrderQueryRequest;
 import com.printercloud.entity.PrintOrder;
 import com.printercloud.service.PrintOrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,19 +32,36 @@ public class PrintOrderController {
      * 创建订单
      */
     @PostMapping
-    public ResponseEntity<Map<String, Object>> createOrder(@RequestBody CreateOrderRequest request) {
+    public R<PrintOrder> createOrder(@RequestBody CreateOrderRequest request) {
         try {
+            // 参数验证
+            if (request.getUserId() == null) {
+                return R.validateFailed("用户ID不能为空");
+            }
+
+            if (request.getFileName() == null || request.getFileName().trim().isEmpty()) {
+                return R.validateFailed("文件名不能为空");
+            }
+
+            if (request.getCopies() == null || request.getCopies() <= 0) {
+                return R.validateFailed("打印份数必须大于0");
+            }
+
+            if (request.getActualPages() == null || request.getActualPages() <= 0) {
+                return R.validateFailed("打印页数必须大于0");
+            }
+
+            if (request.getAmount() == null || request.getAmount().compareTo(BigDecimal.ZERO) < 0) {
+                return R.validateFailed("订单金额不能为负数");
+            }
+
             PrintOrder order = orderService.createOrder(request);
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "订单创建成功");
-            response.put("data", order);
-            return ResponseEntity.ok(response);
+            return R.ok(order, "订单创建成功");
+
+        } catch (IllegalArgumentException e) {
+            return R.validateFailed("参数错误: " + e.getMessage());
         } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "订单创建失败: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return R.fail("订单创建失败: " + e.getMessage());
         }
     }
 
@@ -51,7 +69,7 @@ public class PrintOrderController {
      * 获取订单列表
      */
     @GetMapping
-    public ResponseEntity<Map<String, Object>> getOrderList(
+    public R<Map<String, Object>> getOrderList(
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) Integer status,
             @RequestParam(required = false) String search,
@@ -72,11 +90,6 @@ public class PrintOrderController {
 
             Page<PrintOrder> orderPage = orderService.getOrderList(request);
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 200);
-            response.put("success", true);
-            response.put("message", "获取订单列表成功");
-
             Map<String, Object> data = new HashMap<>();
             data.put("content", orderPage.getContent());
             data.put("totalElements", orderPage.getTotalElements());
@@ -84,42 +97,26 @@ public class PrintOrderController {
             data.put("page", page);
             data.put("pageSize", pageSize);
 
-            response.put("data", data);
-
-            return ResponseEntity.ok(response);
+            return R.ok(data, "获取订单列表成功");
         } catch (Exception e) {
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 500);
-            response.put("success", false);
-            response.put("message", "获取订单列表失败: " + e.getMessage());
-            return ResponseEntity.status(500).body(response);
+            return R.fail("获取订单列表失败: " + e.getMessage());
         }
     }
 
     /**
-     * 根据ID获取订单详情
+     * 根据ID获取订单
      */
     @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> getOrderById(@PathVariable Long id) {
+    public R<PrintOrder> getOrderById(@PathVariable Long id) {
         try {
             PrintOrder order = orderService.getOrderById(id);
-            Map<String, Object> response = new HashMap<>();
-            
-            if (order != null) {
-                response.put("success", true);
-                response.put("data", order);
-            } else {
-                response.put("success", false);
-                response.put("message", "订单不存在");
+            if (order == null) {
+                return R.fail("订单不存在", 404);
             }
-            
-            return ResponseEntity.ok(response);
+
+            return R.ok(order, "获取订单成功");
         } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "获取订单详情失败: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return R.fail("获取订单失败: " + e.getMessage());
         }
     }
 
@@ -127,75 +124,50 @@ public class PrintOrderController {
      * 根据验证码查询订单
      */
     @GetMapping("/verify/{verifyCode}")
-    public ResponseEntity<Map<String, Object>> getOrderByVerifyCode(@PathVariable String verifyCode) {
+    public R<List<PrintOrder>> getOrderByVerifyCode(@PathVariable String verifyCode) {
         try {
             List<PrintOrder> orders = orderService.searchByVerifyCode(verifyCode);
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("data", orders);
-            response.put("count", orders.size());
-            
-            return ResponseEntity.ok(response);
+            return R.ok(orders, "查询订单成功");
         } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "查询订单失败: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return R.fail("查询订单失败: " + e.getMessage());
         }
     }
 
     /**
      * 更新订单状态
      */
-    @PutMapping("/{id}/status")
-    public ResponseEntity<Map<String, Object>> updateOrderStatus(
-            @PathVariable Long id, 
-            @RequestParam Integer status) {
-        
+    @PutMapping("/{id}/status/{status}")
+    public R<Void> updateOrderStatus(
+            @PathVariable Long id,
+            @PathVariable Integer status) {
         try {
             boolean success = orderService.updateOrderStatus(id, status);
-            Map<String, Object> response = new HashMap<>();
-            
+
             if (success) {
-                response.put("success", true);
-                response.put("message", "订单状态更新成功");
+                return R.ok(null, "更新订单状态成功");
             } else {
-                response.put("success", false);
-                response.put("message", "订单不存在或更新失败");
+                return R.fail("订单不存在或状态更新失败", 404);
             }
-            
-            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "更新订单状态失败: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return R.fail("更新订单状态失败: " + e.getMessage());
         }
     }
 
     /**
-     * 验证码验证并完成订单
+     * 验证码完成订单
      */
-    @PostMapping("/complete")
-    public ResponseEntity<Map<String, Object>> completeOrder(@RequestParam String verifyCode) {
+    @PutMapping("/complete/{verifyCode}")
+    public R<Void> completeOrder(@PathVariable String verifyCode) {
         try {
             boolean success = orderService.completeOrderByVerifyCode(verifyCode);
-            Map<String, Object> response = new HashMap<>();
-            
+
             if (success) {
-                response.put("success", true);
-                response.put("message", "订单完成成功");
+                return R.ok(null, "订单完成成功");
             } else {
-                response.put("success", false);
-                response.put("message", "验证码无效或订单状态不正确");
+                return R.validateFailed("订单不存在或状态不正确");
             }
-            
-            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "完成订单失败: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return R.fail("订单完成失败: " + e.getMessage());
         }
     }
 
@@ -203,20 +175,12 @@ public class PrintOrderController {
      * 获取今日订单
      */
     @GetMapping("/today")
-    public ResponseEntity<Map<String, Object>> getTodayOrders() {
+    public R<List<PrintOrder>> getTodayOrders() {
         try {
             List<PrintOrder> orders = orderService.getTodayOrders();
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("data", orders);
-            response.put("count", orders.size());
-            
-            return ResponseEntity.ok(response);
+            return R.ok(orders, "获取今日订单成功");
         } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "获取今日订单失败: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return R.fail("获取今日订单失败: " + e.getMessage());
         }
     }
 
@@ -224,28 +188,20 @@ public class PrintOrderController {
      * 获取待处理订单
      */
     @GetMapping("/pending")
-    public ResponseEntity<Map<String, Object>> getPendingOrders() {
+    public R<List<PrintOrder>> getPendingOrders() {
         try {
             List<PrintOrder> orders = orderService.getPendingOrders();
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("data", orders);
-            response.put("count", orders.size());
-            
-            return ResponseEntity.ok(response);
+            return R.ok(orders, "获取待处理订单成功");
         } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "获取待处理订单失败: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return R.fail("获取待处理订单失败: " + e.getMessage());
         }
     }
 
     /**
-     * 获取订单统计
+     * 获取订单统计信息
      */
     @GetMapping("/statistics")
-    public ResponseEntity<Map<String, Object>> getOrderStatistics(
+    public R<Map<String, Object>> getOrderStatistics(
             @RequestParam(required = false) Long userId) {
 
         try {
@@ -256,42 +212,27 @@ public class PrintOrderController {
                 statistics = orderService.getOrderStatistics();
             }
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("data", statistics);
-
-            return ResponseEntity.ok(response);
+            return R.ok(statistics, "获取订单统计信息成功");
         } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "获取订单统计失败: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return R.fail("获取订单统计信息失败: " + e.getMessage());
         }
     }
 
     /**
      * 取消订单
      */
-    @PostMapping("/cancel")
-    public ResponseEntity<Map<String, Object>> cancelOrder(@RequestParam Long orderId) {
+    @PutMapping("/{id}/cancel")
+    public R<Void> cancelOrder(@PathVariable Long id) {
         try {
-            boolean success = orderService.cancelOrder(orderId);
-            Map<String, Object> response = new HashMap<>();
+            boolean success = orderService.cancelOrder(id);
 
             if (success) {
-                response.put("success", true);
-                response.put("message", "订单取消成功");
+                return R.ok(null, "订单取消成功");
             } else {
-                response.put("success", false);
-                response.put("message", "订单状态不允许取消或订单不存在");
+                return R.validateFailed("订单不存在或状态不允许取消");
             }
-
-            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "取消订单失败: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return R.fail("订单取消失败: " + e.getMessage());
         }
     }
 
@@ -299,51 +240,34 @@ public class PrintOrderController {
      * 获取最近订单
      */
     @GetMapping("/recent")
-    public ResponseEntity<Map<String, Object>> getRecentOrders(
+    public R<List<PrintOrder>> getRecentOrders(
             @RequestParam(required = false) Long userId,
             @RequestParam(defaultValue = "5") Integer limit) {
         try {
             List<PrintOrder> orders = orderService.getRecentOrders(userId, limit);
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("data", orders);
-            response.put("count", orders.size());
-
-            return ResponseEntity.ok(response);
+            return R.ok(orders, "获取最近订单成功");
         } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "获取最近订单失败: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return R.fail("获取最近订单失败: " + e.getMessage());
         }
     }
 
     /**
-     * 更新订单状态（字符串参数版本）
+     * 根据状态名称更新订单状态
      */
-    @PostMapping("/{id}/status")
-    public ResponseEntity<Map<String, Object>> updateOrderStatusByString(
+    @PutMapping("/{id}/status/name/{statusName}")
+    public R<Void> updateOrderStatusByString(
             @PathVariable Long id,
-            @RequestBody Map<String, String> request) {
+            @PathVariable String statusName) {
         try {
-            String status = request.get("status");
-            boolean success = orderService.updateOrderStatusByString(id, status);
+            boolean success = orderService.updateOrderStatusByString(id, statusName);
 
-            Map<String, Object> response = new HashMap<>();
             if (success) {
-                response.put("success", true);
-                response.put("message", "订单状态更新成功");
+                return R.ok(null, "更新订单状态成功");
             } else {
-                response.put("success", false);
-                response.put("message", "订单不存在或状态更新失败");
+                return R.validateFailed("订单不存在或状态名称无效");
             }
-
-            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "更新订单状态失败: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return R.fail("更新订单状态失败: " + e.getMessage());
         }
     }
 }

@@ -61,6 +61,7 @@ public class PrintOrderService {
         order.setPaperSize(request.getPaperSize());
         order.setRemark(request.getRemark());
         order.setAmount(request.getAmount());
+        order.setFileId(request.getFileId()); // 设置文件ID
         order.setStatus(0); // 待支付
 
         PrintOrder savedOrder = orderRepository.save(order);

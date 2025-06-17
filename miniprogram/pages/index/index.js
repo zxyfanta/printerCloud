@@ -1,5 +1,6 @@
 // index.js
 const app = getApp();
+const dateUtil = require('../../utils/dateUtil');
 
 Page({
   data: {
@@ -16,10 +17,11 @@ Page({
 
   onLoad() {
     console.log('首页加载');
+    this.loadPriceList();
     // 延迟执行，确保小程序完全初始化
-    setTimeout(() => {
-      this.checkLogin();
-    }, 200);
+    // setTimeout(() =>
+    //   this.checkLogin();
+    // }, 200);
   },
 
   onShow() {
@@ -51,6 +53,52 @@ Page({
   },
 
   /**
+   * 加载价格列表
+   */
+  loadPriceList() {
+    app.request({
+      url: '/price/public',
+      method: 'GET'
+    }).then(res => {
+      if (res.code === 200) {
+        const prices = res.data;
+        const priceList = [
+          { label: '黑白打印', value: '¥0.1/页', type: 'bw' },
+          { label: '彩色打印', value: '¥0.5/页', type: 'color' },
+          { label: '双面打印', value: '8折优惠', type: 'double' },
+          { label: 'A3纸张', value: '¥0.2/页', type: 'a3' }
+        ];
+
+        // 更新价格显示
+        prices.forEach(price => {
+          switch(price.configKey) {
+            case 'bw_print':
+              priceList[0].value = `¥${price.price}/页`;
+              break;
+            case 'color_print':
+              priceList[1].value = `¥${price.price}/页`;
+              break;
+            case 'double_side_discount':
+              const discountPercent = Math.round(parseFloat(price.price) * 10);
+              priceList[2].value = `${discountPercent}折优惠`;
+              break;
+            case 'a3_extra':
+              priceList[3].value = `¥${price.price}/页`;
+              break;
+          }
+        });
+
+        this.setData({
+          priceList: priceList
+        });
+      }
+    }).catch(err => {
+      console.error('加载价格列表失败：', err);
+      // 使用默认价格列表
+    });
+  },
+
+  /**
    * 加载最近订单
    */
   loadRecentOrders() {
@@ -63,7 +111,7 @@ Page({
           ...order,
           statusClass: this.getStatusClass(order.status),
           statusText: this.getStatusText(order.status),
-          createTime: this.formatTime(order.createTime)
+          createTime: dateUtil.formatRelativeTime(order.createTime)
         }));
         this.setData({
           recentOrders: orders
@@ -125,24 +173,7 @@ Page({
     return statusMap[status] || '未知';
   },
 
-  /**
-   * 格式化时间
-   */
-  formatTime(timeStr) {
-    const date = new Date(timeStr);
-    const now = new Date();
-    const diff = now - date;
-    
-    if (diff < 60000) { // 1分钟内
-      return '刚刚';
-    } else if (diff < 3600000) { // 1小时内
-      return Math.floor(diff / 60000) + '分钟前';
-    } else if (diff < 86400000) { // 1天内
-      return Math.floor(diff / 3600000) + '小时前';
-    } else {
-      return date.toLocaleDateString();
-    }
-  },
+
 
   /**
    * 跳转到上传页面

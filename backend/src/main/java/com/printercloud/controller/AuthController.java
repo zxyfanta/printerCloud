@@ -1,7 +1,7 @@
 package com.printercloud.controller;
 
+import com.printercloud.common.R;
 import com.printercloud.dto.LoginRequest;
-import com.printercloud.dto.LoginResponse;
 import com.printercloud.entity.User;
 import com.printercloud.service.UserService;
 import com.printercloud.util.JwtUtil;
@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -45,53 +44,42 @@ public class AuthController {
         @ApiResponse(responseCode = "500", description = "服务器错误")
     })
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(
+    public R<Map<String, Object>> login(
             @Parameter(description = "登录请求参数", required = true) @RequestBody LoginRequest request) {
-        Map<String, Object> response = new HashMap<>();
-        
+
         // 添加调试日志
         System.out.println("收到登录请求，loginType: " + request.getLoginType() + ", code: " + request.getCode());
-        
+
         try {
             if ("ADMIN".equals(request.getLoginType())) {
                 // 管理员登录
                 String token = userService.adminLogin(request.getUsername(), request.getPassword());
                 if (token != null) {
                     User user = userService.getUserByUsername(request.getUsername());
-                    response.put("code", 200);
-                    response.put("message", "登录成功");
-                    response.put("token", token);
-                    response.put("userInfo", user);
-                    return ResponseEntity.ok(response);
+                    Map<String, Object> data = new HashMap<>();
+                    data.put("token", token);
+                    data.put("userInfo", user);
+                    return R.ok(data, "登录成功");
                 } else {
-                    response.put("code", 401);
-                    response.put("message", "用户名或密码错误");
-                    return ResponseEntity.ok(response);
+                    return R.unauthorized("用户名或密码错误");
                 }
             } else if ("WECHAT".equals(request.getLoginType())) {
                 // 微信登录
                 User user = userService.wechatLogin(request.getCode());
                 if (user != null) {
                     String token = jwtUtil.generateToken(user.getId(), user.getUsername() != null ? user.getUsername() : user.getOpenId(), user.getRole());
-                    response.put("code", 200);
-                    response.put("message", "登录成功");
-                    response.put("token", token);
-                    response.put("userInfo", user);
-                    return ResponseEntity.ok(response);
+                    Map<String, Object> data = new HashMap<>();
+                    data.put("token", token);
+                    data.put("userInfo", user);
+                    return R.ok(data, "登录成功");
                 } else {
-                    response.put("code", 401);
-                    response.put("message", "微信登录失败");
-                    return ResponseEntity.ok(response);
+                    return R.unauthorized("微信登录失败");
                 }
             } else {
-                response.put("code", 400);
-                response.put("message", "不支持的登录类型");
-                return ResponseEntity.ok(response);
+                return R.validateFailed("不支持的登录类型");
             }
         } catch (Exception e) {
-            response.put("code", 500);
-            response.put("message", "登录失败: " + e.getMessage());
-            return ResponseEntity.ok(response);
+            return R.fail("登录失败: " + e.getMessage());
         }
     }
 
@@ -100,48 +88,38 @@ public class AuthController {
      */
     @Operation(summary = "获取当前用户信息", description = "根据token获取当前登录用户的详细信息")
     @GetMapping("/userinfo")
-    public ResponseEntity<Map<String, Object>> getUserInfo(
+    public R<User> getUserInfo(
             @Parameter(description = "JWT Token", required = true) @RequestHeader("Authorization") String token) {
-        Map<String, Object> response = new HashMap<>();
-        
         try {
             // 移除Bearer前缀
             if (token.startsWith("Bearer ")) {
                 token = token.substring(7);
             }
-            
+
             User user = userService.validateTokenAndGetUser(token);
             if (user != null) {
-                response.put("code", 200);
-                response.put("message", "获取成功");
-                response.put("data", user);
+                return R.ok(user, "获取成功");
             } else {
-                response.put("code", 401);
-                response.put("message", "token无效");
+                return R.unauthorized("token无效");
             }
         } catch (Exception e) {
-            response.put("code", 500);
-            response.put("message", "获取用户信息失败: " + e.getMessage());
+            return R.fail("获取用户信息失败: " + e.getMessage());
         }
-        
-        return ResponseEntity.ok(response);
     }
 
     /**
      * 更新用户信息
      */
     @PostMapping("/update")
-    public ResponseEntity<Map<String, Object>> updateUserInfo(
+    public R<User> updateUserInfo(
             @RequestHeader("Authorization") String token,
             @RequestBody User userInfo) {
-        Map<String, Object> response = new HashMap<>();
-        
         try {
             // 移除Bearer前缀
             if (token.startsWith("Bearer ")) {
                 token = token.substring(7);
             }
-            
+
             User currentUser = userService.validateTokenAndGetUser(token);
             if (currentUser != null) {
                 // 更新允许的字段
@@ -149,71 +127,55 @@ public class AuthController {
                 currentUser.setAvatarUrl(userInfo.getAvatarUrl());
                 currentUser.setGender(userInfo.getGender());
                 currentUser.setPhone(userInfo.getPhone());
-                
+
                 User updatedUser = userService.updateUser(currentUser);
-                response.put("code", 200);
-                response.put("message", "更新成功");
-                response.put("data", updatedUser);
+                return R.ok(updatedUser, "更新成功");
             } else {
-                response.put("code", 401);
-                response.put("message", "token无效");
+                return R.unauthorized("token无效");
             }
         } catch (Exception e) {
-            response.put("code", 500);
-            response.put("message", "更新用户信息失败: " + e.getMessage());
+            return R.fail("更新用户信息失败: " + e.getMessage());
         }
-        
-        return ResponseEntity.ok(response);
     }
 
     /**
      * 修改密码
      */
     @PostMapping("/change-password")
-    public ResponseEntity<Map<String, Object>> changePassword(
+    public R<Void> changePassword(
             @RequestHeader("Authorization") String token,
             @RequestBody Map<String, String> passwordData) {
-        Map<String, Object> response = new HashMap<>();
-        
         try {
             // 移除Bearer前缀
             if (token.startsWith("Bearer ")) {
                 token = token.substring(7);
             }
-            
+
             User currentUser = userService.validateTokenAndGetUser(token);
             if (currentUser != null) {
                 String oldPassword = passwordData.get("oldPassword");
                 String newPassword = passwordData.get("newPassword");
-                
+
                 boolean success = userService.changePassword(currentUser.getId(), oldPassword, newPassword);
                 if (success) {
-                    response.put("code", 200);
-                    response.put("message", "密码修改成功");
+                    return R.ok(null, "密码修改成功");
                 } else {
-                    response.put("code", 400);
-                    response.put("message", "原密码错误");
+                    return R.validateFailed("原密码错误");
                 }
             } else {
-                response.put("code", 401);
-                response.put("message", "token无效");
+                return R.unauthorized("token无效");
             }
         } catch (Exception e) {
-            response.put("code", 500);
-            response.put("message", "修改密码失败: " + e.getMessage());
+            return R.fail("修改密码失败: " + e.getMessage());
         }
-        
-        return ResponseEntity.ok(response);
     }
 
     /**
-     * 获取用户统计数据
+     * 获取用户统计信息
      */
     @GetMapping("/user/stats")
-    public ResponseEntity<Map<String, Object>> getUserStats(
+    public R<Map<String, Object>> getUserStats(
             @RequestHeader("Authorization") String token) {
-        Map<String, Object> response = new HashMap<>();
-
         try {
             // 移除Bearer前缀
             if (token.startsWith("Bearer ")) {
@@ -221,34 +183,22 @@ public class AuthController {
             }
 
             User currentUser = userService.validateTokenAndGetUser(token);
-            if (currentUser == null) {
-                response.put("code", 401);
-                response.put("message", "token无效");
-                return ResponseEntity.ok(response);
+            if (currentUser != null) {
+                Map<String, Object> stats = userService.getUserStatistics(currentUser.getId());
+                return R.ok(stats, "获取成功");
+            } else {
+                return R.unauthorized("token无效");
             }
-
-            // 获取用户统计数据
-            Map<String, Object> stats = userService.getUserStatistics(currentUser.getId());
-
-            response.put("code", 200);
-            response.put("message", "获取成功");
-            response.put("data", stats);
         } catch (Exception e) {
-            response.put("code", 500);
-            response.put("message", "获取用户统计失败: " + e.getMessage());
+            return R.fail("获取用户统计信息失败: " + e.getMessage());
         }
-
-        return ResponseEntity.ok(response);
     }
 
     /**
      * 登出
      */
     @PostMapping("/logout")
-    public ResponseEntity<Map<String, Object>> logout() {
-        Map<String, Object> response = new HashMap<>();
-        response.put("code", 200);
-        response.put("message", "登出成功");
-        return ResponseEntity.ok(response);
+    public R<Void> logout() {
+        return R.ok(null, "登出成功");
     }
 }

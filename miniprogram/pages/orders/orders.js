@@ -1,5 +1,6 @@
 // orders.js
 const app = getApp();
+const dateUtil = require('../../utils/dateUtil');
 
 Page({
   data: {
@@ -93,7 +94,7 @@ Page({
           statusClass: this.getStatusClass(order.status),
           statusText: this.getStatusText(order.status),
           fileIcon: this.getFileIcon(order.fileType),
-          createTime: this.formatTime(order.createTime)
+          createTime: dateUtil.formatShortTime(order.createTime)
         }));
 
         if (refresh) {
@@ -154,9 +155,8 @@ Page({
       success: (res) => {
         if (res.confirm) {
           app.request({
-            url: '/orders/cancel',
-            method: 'POST',
-            data: { orderId: orderId }
+            url: `/orders/${orderId}/cancel`,
+            method: 'PUT'
           }).then(result => {
             if (result.code === 200) {
               app.showSuccess('订单已取消');
@@ -275,13 +275,7 @@ Page({
     return iconMap[fileType] || '📁';
   },
 
-  /**
-   * 格式化时间
-   */
-  formatTime(timeStr) {
-    const date = new Date(timeStr);
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString().slice(0, 5);
-  },
+
 
   /**
    * 阻止事件冒泡

@@ -22,6 +22,7 @@ public class CreateOrderRequest {
     private String paperSize;
     private String remark;
     private BigDecimal amount;
+    private Long fileId; // 添加文件ID字段
 
     // 构造函数
     public CreateOrderRequest() {}
@@ -121,5 +122,13 @@ public class CreateOrderRequest {
 
     public void setAmount(BigDecimal amount) {
         this.amount = amount;
+    }
+
+    public Long getFileId() {
+        return fileId;
+    }
+
+    public void setFileId(Long fileId) {
+        this.fileId = fileId;
     }
 }

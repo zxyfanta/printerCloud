@@ -178,12 +178,31 @@ Page({
    * 上传文件到服务器
    */
   uploadFileToServer(fileInfo) {
-    // 检查登录状态
-    if (!app.globalData.isLogin) {
-      app.showError('请先登录');
-      return;
-    }
+    // 先验证token是否有效
+    app.validateToken().then(isValid => {
+      if (!isValid) {
+        // token无效，跳转到登录页面
+        wx.navigateTo({
+          url: '/pages/login/login?redirect=upload'
+        });
+        return;
+      }
 
+      // token有效，开始上传
+      this.performFileUpload(fileInfo);
+    }).catch(err => {
+      console.error('Token验证失败:', err);
+      app.showError('登录验证失败，请重新登录');
+      wx.navigateTo({
+        url: '/pages/login/login?redirect=upload'
+      });
+    });
+  },
+
+  /**
+   * 执行文件上传
+   */
+  performFileUpload(fileInfo) {
     this.setData({
       uploading: true,
       uploadProgress: 0
@@ -218,13 +237,31 @@ Page({
 
             // 存储到全局数据
             app.globalData.tempFileInfo = updatedFileInfo;
-            
+
             // 开始轮询获取文件信息
             this.startPollingFileInfo(data.data.id);
 
           } else {
             this.handleUploadError(data.message || '上传失败');
           }
+        } else if (res.statusCode === 401) {
+          // 未授权，token可能已过期
+          app.logout();
+          this.setData({
+            uploading: false,
+            uploadProgress: 0
+          });
+          wx.showModal({
+            title: '登录已过期',
+            content: '您的登录已过期，请重新登录后继续上传',
+            showCancel: false,
+            confirmText: '重新登录',
+            success: () => {
+              wx.navigateTo({
+                url: '/pages/login/login?redirect=upload'
+              });
+            }
+          });
         } else {
           this.handleUploadError(`上传失败：${res.statusCode}`);
         }
@@ -301,6 +338,22 @@ Page({
         
       }).catch(err => {
         console.error('获取文件信息失败：', err);
+        // 如果是401错误，说明token已过期
+        if (err.message && err.message.includes('401')) {
+          clearInterval(pollingTimer);
+          app.logout();
+          wx.showModal({
+            title: '登录已过期',
+            content: '您的登录已过期，请重新登录',
+            showCancel: false,
+            confirmText: '重新登录',
+            success: () => {
+              wx.navigateTo({
+                url: '/pages/login/login?redirect=upload'
+              });
+            }
+          });
+        }
       });
       
     }, pollingInterval);

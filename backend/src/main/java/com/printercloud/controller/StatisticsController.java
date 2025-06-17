@@ -4,15 +4,13 @@ import com.printercloud.dto.OrderStatisticsDTO;
 import com.printercloud.entity.User;
 import com.printercloud.service.OrderStatisticsService;
 import com.printercloud.service.UserService;
+import com.printercloud.common.R;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 统计数据控制器
@@ -35,197 +33,152 @@ public class StatisticsController {
      * 获取概览统计数据
      */
     @GetMapping("/overview")
-    public ResponseEntity<Map<String, Object>> getOverviewStatistics(@RequestHeader("Authorization") String token) {
-        Map<String, Object> response = new HashMap<>();
-        
+    public R<OrderStatisticsDTO.OverviewStatistics> getOverviewStatistics(@RequestHeader("Authorization") String token) {
         try {
             // 移除Bearer前缀
             if (token.startsWith("Bearer ")) {
                 token = token.substring(7);
             }
-            
+
             User currentUser = userService.validateTokenAndGetUser(token);
             if (currentUser == null || !currentUser.isAdmin()) {
-                response.put("code", 403);
-                response.put("message", "无权限访问");
-                return ResponseEntity.ok(response);
+                return R.forbidden("无权限访问");
             }
-            
+
             OrderStatisticsDTO.OverviewStatistics overview = orderStatisticsService.getOverviewStatistics();
-            response.put("code", 200);
-            response.put("message", "获取成功");
-            response.put("data", overview);
+            return R.ok(overview, "获取成功");
         } catch (Exception e) {
-            response.put("code", 500);
-            response.put("message", "获取统计数据失败: " + e.getMessage());
+            return R.fail("获取统计数据失败: " + e.getMessage());
         }
-        
-        return ResponseEntity.ok(response);
     }
 
     /**
      * 获取日期范围内的统计数据
      */
     @GetMapping("/daily")
-    public ResponseEntity<Map<String, Object>> getDailyStatistics(
+    public R<List<OrderStatisticsDTO.DailyStatistics>> getDailyStatistics(
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
             @RequestHeader("Authorization") String token) {
-        Map<String, Object> response = new HashMap<>();
-        
         try {
             // 移除Bearer前缀
             if (token.startsWith("Bearer ")) {
                 token = token.substring(7);
             }
-            
+
             User currentUser = userService.validateTokenAndGetUser(token);
             if (currentUser == null || !currentUser.isAdmin()) {
-                response.put("code", 403);
-                response.put("message", "无权限访问");
-                return ResponseEntity.ok(response);
+                return R.forbidden("无权限访问");
             }
-            
+
             // 限制查询范围，最多90天
             if (startDate.isBefore(endDate.minusDays(90))) {
                 startDate = endDate.minusDays(90);
             }
-            
-            List<OrderStatisticsDTO.DailyStatistics> dailyStats = 
+
+            List<OrderStatisticsDTO.DailyStatistics> dailyStats =
                 orderStatisticsService.getDailyStatistics(startDate, endDate);
-            
-            response.put("code", 200);
-            response.put("message", "获取成功");
-            response.put("data", dailyStats);
+
+            return R.ok(dailyStats, "获取成功");
         } catch (Exception e) {
-            response.put("code", 500);
-            response.put("message", "获取统计数据失败: " + e.getMessage());
+            return R.fail("获取统计数据失败: " + e.getMessage());
         }
-        
-        return ResponseEntity.ok(response);
     }
 
     /**
      * 获取图表数据
      */
     @GetMapping("/chart")
-    public ResponseEntity<Map<String, Object>> getChartData(
+    public R<OrderStatisticsDTO.ChartData> getChartData(
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
             @RequestParam(defaultValue = "total") String type,
             @RequestHeader("Authorization") String token) {
-        Map<String, Object> response = new HashMap<>();
-        
         try {
             // 移除Bearer前缀
             if (token.startsWith("Bearer ")) {
                 token = token.substring(7);
             }
-            
+
             User currentUser = userService.validateTokenAndGetUser(token);
             if (currentUser == null || !currentUser.isAdmin()) {
-                response.put("code", 403);
-                response.put("message", "无权限访问");
-                return ResponseEntity.ok(response);
+                return R.forbidden("无权限访问");
             }
-            
+
             // 限制查询范围，最多90天
             if (startDate.isBefore(endDate.minusDays(90))) {
                 startDate = endDate.minusDays(90);
             }
-            
-            OrderStatisticsDTO.ChartData chartData = 
+
+            OrderStatisticsDTO.ChartData chartData =
                 orderStatisticsService.getChartData(startDate, endDate, type);
-            
-            response.put("code", 200);
-            response.put("message", "获取成功");
-            response.put("data", chartData);
+
+            return R.ok(chartData, "获取成功");
         } catch (Exception e) {
-            response.put("code", 500);
-            response.put("message", "获取图表数据失败: " + e.getMessage());
+            return R.fail("获取图表数据失败: " + e.getMessage());
         }
-        
-        return ResponseEntity.ok(response);
     }
 
     /**
      * 获取最近N天的统计数据
      */
     @GetMapping("/recent/{days}")
-    public ResponseEntity<Map<String, Object>> getRecentDaysStatistics(
+    public R<List<OrderStatisticsDTO.DailyStatistics>> getRecentDaysStatistics(
             @PathVariable int days,
             @RequestHeader("Authorization") String token) {
-        Map<String, Object> response = new HashMap<>();
-        
         try {
             // 移除Bearer前缀
             if (token.startsWith("Bearer ")) {
                 token = token.substring(7);
             }
-            
+
             User currentUser = userService.validateTokenAndGetUser(token);
             if (currentUser == null || !currentUser.isAdmin()) {
-                response.put("code", 403);
-                response.put("message", "无权限访问");
-                return ResponseEntity.ok(response);
+                return R.forbidden("无权限访问");
             }
-            
+
             // 限制天数范围
             if (days > 90) days = 90;
             if (days < 1) days = 7;
-            
-            List<OrderStatisticsDTO.DailyStatistics> dailyStats = 
+
+            List<OrderStatisticsDTO.DailyStatistics> dailyStats =
                 orderStatisticsService.getRecentDaysStatistics(days);
-            
-            response.put("code", 200);
-            response.put("message", "获取成功");
-            response.put("data", dailyStats);
+
+            return R.ok(dailyStats, "获取成功");
         } catch (Exception e) {
-            response.put("code", 500);
-            response.put("message", "获取统计数据失败: " + e.getMessage());
+            return R.fail("获取统计数据失败: " + e.getMessage());
         }
-        
-        return ResponseEntity.ok(response);
     }
 
     /**
      * 获取最近N天的图表数据
      */
     @GetMapping("/recent/{days}/chart")
-    public ResponseEntity<Map<String, Object>> getRecentDaysChartData(
+    public R<OrderStatisticsDTO.ChartData> getRecentDaysChartData(
             @PathVariable int days,
             @RequestParam(defaultValue = "total") String type,
             @RequestHeader("Authorization") String token) {
-        Map<String, Object> response = new HashMap<>();
-        
         try {
             // 移除Bearer前缀
             if (token.startsWith("Bearer ")) {
                 token = token.substring(7);
             }
-            
+
             User currentUser = userService.validateTokenAndGetUser(token);
             if (currentUser == null || !currentUser.isAdmin()) {
-                response.put("code", 403);
-                response.put("message", "无权限访问");
-                return ResponseEntity.ok(response);
+                return R.forbidden("无权限访问");
             }
-            
+
             // 限制天数范围
             if (days > 90) days = 90;
             if (days < 1) days = 7;
-            
-            OrderStatisticsDTO.ChartData chartData = 
+
+            OrderStatisticsDTO.ChartData chartData =
                 orderStatisticsService.getRecentDaysChartData(days, type);
-            
-            response.put("code", 200);
-            response.put("message", "获取成功");
-            response.put("data", chartData);
+
+            return R.ok(chartData, "获取成功");
         } catch (Exception e) {
-            response.put("code", 500);
-            response.put("message", "获取图表数据失败: " + e.getMessage());
+            return R.fail("获取图表数据失败: " + e.getMessage());
         }
-        
-        return ResponseEntity.ok(response);
     }
 }

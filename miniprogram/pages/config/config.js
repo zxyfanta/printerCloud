@@ -31,6 +31,7 @@ Page({
   onLoad(options) {
     console.log('打印配置页面加载', options);
     this.loadLocalFileInfo();
+    this.loadPriceConfig();
   },
 
   onReady() {
@@ -55,6 +56,55 @@ Page({
       // 使用本地估算信息
       this.loadLocalEstimatedInfo(tempFileInfo);
     }
+  },
+
+  /**
+   * 加载价格配置
+   */
+  loadPriceConfig() {
+    app.request({
+      url: '/price/public',
+      method: 'GET'
+    }).then(res => {
+      if (res.code === 200) {
+        const prices = res.data;
+        const priceConfig = {
+          blackWhite: 0.1,
+          color: 0.5,
+          doubleSideDiscount: 0.8,
+          doubleSideDiscountText: '8折',
+          doubleSideDiscountPercentText: '-20%'
+        };
+
+        // 解析价格配置
+        prices.forEach(price => {
+          switch(price.configKey) {
+            case 'bw_print':
+              priceConfig.blackWhite = parseFloat(price.price);
+              break;
+            case 'color_print':
+              priceConfig.color = parseFloat(price.price);
+              break;
+            case 'double_side_discount':
+              priceConfig.doubleSideDiscount = parseFloat(price.price);
+              const discountPercent = Math.round((1 - priceConfig.doubleSideDiscount) * 100);
+              priceConfig.doubleSideDiscountText = `${Math.round(priceConfig.doubleSideDiscount * 10)}折`;
+              priceConfig.doubleSideDiscountPercentText = `-${discountPercent}%`;
+              break;
+          }
+        });
+
+        this.setData({
+          priceConfig: priceConfig
+        });
+
+        // 重新计算价格
+        this.calculatePrice();
+      }
+    }).catch(err => {
+      console.error('加载价格配置失败：', err);
+      // 使用默认价格配置
+    });
   },
 
   /**
