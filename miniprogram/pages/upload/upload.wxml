@@ -80,9 +80,15 @@
         </view>
 
         <!-- 上传状态 -->
-        <view class="upload-status" wx:if="{{fileInfo.uploaded && !uploading}}">
+        <view class="upload-status" wx:if="{{fileInfo.uploaded && !uploading && !pollingFileInfo}}">
           <text class="status-icon">✅</text>
           <text class="status-text">文件已成功上传到服务器</text>
+        </view>
+
+        <!-- 轮询状态 -->
+        <view class="polling-status" wx:if="{{pollingFileInfo}}">
+          <text class="status-icon">⏳</text>
+          <text class="status-text">{{pollingMessage}}</text>
         </view>
 
         <!-- 图片预览 -->
@@ -119,13 +125,13 @@
 
     <!-- 操作按钮 -->
     <view class="action-buttons" wx:if="{{showPreview && fileInfo}}">
-      <button class="btn secondary" bindtap="removeFile">
+      <button class="btn secondary" bindtap="removeFile" disabled="{{pollingFileInfo}}">
         <text class="btn-text">重新选择</text>
       </button>
-      <button class="btn secondary" bindtap="goToPreview">
+      <button class="btn secondary" bindtap="goToPreview" disabled="{{pollingFileInfo}}">
         <text class="btn-text">📖 预览文件</text>
       </button>
-      <button class="btn primary" bindtap="goToConfig">
+      <button class="btn primary" bindtap="goToConfig" disabled="{{pollingFileInfo}}">
         <text class="btn-text">下一步：打印配置</text>
       </button>
     </view>

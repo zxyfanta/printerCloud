@@ -17,6 +17,13 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * 文件解析服务
@@ -29,7 +36,82 @@ public class FileParseService {
     private PrintFileRepository fileRepository;
 
     /**
-     * 异步解析文件信息
+     * 异步处理文件（计算MD5 + 解析文件信息）
+     */
+    @Async
+    public void processFileAsync(Long fileId) {
+        PrintFile printFile = fileRepository.findById(fileId).orElse(null);
+        if (printFile == null) {
+            return;
+        }
+
+        try {
+            // 小文件优化：对于小于1MB的文件，快速处理
+            boolean isSmallFile = printFile.getFileSize() != null && printFile.getFileSize() < 1024 * 1024; // 1MB
+
+            if (isSmallFile) {
+                // 小文件快速处理：同时计算MD5和解析
+                processSmallFileSync(printFile);
+            } else {
+                // 大文件分步处理
+                processLargeFileAsync(printFile);
+            }
+
+        } catch (Exception e) {
+            // 处理失败
+            printFile.setStatus(PrintFile.STATUS_FAILED);
+            printFile.setParseError(e.getMessage());
+            fileRepository.save(printFile);
+        }
+    }
+
+    /**
+     * 处理小文件（同步快速处理）
+     */
+    private void processSmallFileSync(PrintFile printFile) throws IOException {
+        // 直接设置为解析中状态，跳过MD5计算状态
+        printFile.setStatus(PrintFile.STATUS_PARSING);
+        fileRepository.save(printFile);
+
+        // 同时计算MD5和解析文件
+        String md5 = calculateFileMD5(printFile.getFilePath());
+        int pageCount = parseFilePageCount(printFile);
+
+        // 一次性更新所有结果
+        printFile.setFileMd5(md5);
+        printFile.setPageCount(pageCount);
+        printFile.setStatus(PrintFile.STATUS_COMPLETED);
+        printFile.setParseError(null);
+        fileRepository.save(printFile);
+    }
+
+    /**
+     * 处理大文件（分步异步处理）
+     */
+    private void processLargeFileAsync(PrintFile printFile) throws IOException {
+        // 第一步：计算MD5
+        printFile.setStatus(PrintFile.STATUS_CALCULATING_MD5);
+        fileRepository.save(printFile);
+
+        String md5 = calculateFileMD5(printFile.getFilePath());
+        printFile.setFileMd5(md5);
+        fileRepository.save(printFile);
+
+        // 第二步：解析文件信息
+        printFile.setStatus(PrintFile.STATUS_PARSING);
+        fileRepository.save(printFile);
+
+        int pageCount = parseFilePageCount(printFile);
+
+        // 更新最终结果
+        printFile.setPageCount(pageCount);
+        printFile.setStatus(PrintFile.STATUS_COMPLETED);
+        printFile.setParseError(null);
+        fileRepository.save(printFile);
+    }
+
+    /**
+     * 异步解析文件信息（保留原方法以兼容）
      */
     @Async
     public void parseFileAsync(Long fileId) {
@@ -40,28 +122,27 @@ public class FileParseService {
             }
 
             // 更新状态为解析中
-            printFile.setStatus(2);
+            printFile.setStatus(PrintFile.STATUS_PARSING);
             fileRepository.save(printFile);
 
             // 解析文件
             int pageCount = parseFilePageCount(printFile);
-            
+
             // 更新解析结果
             printFile.setPageCount(pageCount);
-            printFile.setStatus(3); // 解析成功
+            printFile.setStatus(PrintFile.STATUS_COMPLETED);
             printFile.setParseError(null);
-            
+            fileRepository.save(printFile);
+
         } catch (Exception e) {
             // 解析失败
             PrintFile printFile = fileRepository.findById(fileId).orElse(null);
             if (printFile != null) {
-                printFile.setStatus(4); // 解析失败
+                printFile.setStatus(PrintFile.STATUS_FAILED);
                 printFile.setParseError(e.getMessage());
                 fileRepository.save(printFile);
             }
         }
-        
-        fileRepository.save(fileRepository.findById(fileId).orElse(null));
     }
 
     /**
@@ -191,6 +272,35 @@ public class FileParseService {
         // 假设每页约50KB
         int estimatedPages = (int) Math.ceil(fileSize / (50.0 * 1024));
         return Math.max(1, Math.min(estimatedPages, 1000)); // 限制在1-1000页之间
+    }
+
+    /**
+     * 计算文件MD5
+     */
+    private String calculateFileMD5(String filePath) throws IOException {
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            Path path = Paths.get(filePath);
+
+            try (InputStream is = Files.newInputStream(path);
+                 DigestInputStream dis = new DigestInputStream(is, md)) {
+
+                byte[] buffer = new byte[8192];
+                while (dis.read(buffer) != -1) {
+                    // 只是为了读取文件内容，不需要处理读取的数据
+                }
+            }
+
+            byte[] digest = md.digest();
+            StringBuilder sb = new StringBuilder();
+            for (byte b : digest) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("MD5算法不可用", e);
+        }
     }
 
     /**

@@ -44,9 +44,9 @@ public class PrintOrderService {
         
         // 生成订单号
         order.setOrderNo(generateOrderNo());
-        
-        // 生成验证码
-        order.setVerifyCode(generateVerifyCode());
+
+        // 取件码在支付成功后生成，创建时不生成
+        // order.setVerifyCode(generateVerifyCode());
         
         // 设置订单信息
         order.setUserId(request.getUserId());
@@ -214,6 +214,10 @@ public class PrintOrderService {
             // 设置相应的时间
             if (status == 1) { // 已支付
                 order.setPayTime(LocalDateTime.now());
+                // 支付成功时生成取件码
+                if (order.getVerifyCode() == null || order.getVerifyCode().isEmpty()) {
+                    order.setVerifyCode(generateVerifyCode());
+                }
             } else if (status == 3) { // 已完成
                 order.setFinishTime(LocalDateTime.now());
             }

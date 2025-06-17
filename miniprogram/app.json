@@ -5,8 +5,6 @@
     "pages/preview/preview",
     "pages/preview-web/preview-web",
     "pages/config/config",
-    "pages/confirm/confirm",
-    "pages/upload-server/upload-server",
     "pages/payment/payment",
     "pages/orders/orders",
     "pages/order-detail/order-detail",
@@ -47,8 +45,9 @@
   },
   "requiredBackgroundModes": ["audio"],
   "networkTimeout": {
-    "request": 10000,
-    "downloadFile": 10000
+    "request": 30000,
+    "uploadFile": 60000,
+    "downloadFile": 30000
   },
   "debug": true,
   "sitemapLocation": "sitemap.json"

@@ -59,7 +59,7 @@ public class PrintOrder {
     @Column(name = "amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
 
-    @Column(name = "verify_code", unique = true, nullable = false)
+    @Column(name = "verify_code", unique = true, nullable = true)
     private String verifyCode;
 
     @Column(name = "status", nullable = false)

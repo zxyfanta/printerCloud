@@ -15,6 +15,14 @@ import java.time.LocalDateTime;
 @Table(name = "pc_print_file")
 public class PrintFile {
 
+    // 文件状态常量
+    public static final int STATUS_UPLOADING = 0;      // 上传中
+    public static final int STATUS_UPLOADED = 1;       // 上传成功
+    public static final int STATUS_CALCULATING_MD5 = 2; // 计算MD5中
+    public static final int STATUS_PARSING = 3;        // 解析文件中
+    public static final int STATUS_COMPLETED = 4;      // 处理完成
+    public static final int STATUS_FAILED = 5;         // 处理失败
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -47,7 +55,7 @@ public class PrintFile {
     private String previewPath;
 
     @Column(name = "status")
-    private Integer status; // 0-上传中，1-上传成功，2-解析中，3-解析成功，4-解析失败
+    private Integer status; // 0-上传中，1-上传成功，2-计算MD5中，3-解析文件中，4-处理完成，5-处理失败
 
     @Column(name = "parse_error")
     private String parseError; // 解析错误信息
@@ -68,7 +76,7 @@ public class PrintFile {
         this.createTime = LocalDateTime.now();
         this.updateTime = LocalDateTime.now();
         this.deleted = false;
-        this.status = 0;
+        this.status = STATUS_UPLOADING;
     }
 
     // Getters and Setters
@@ -217,5 +225,34 @@ public class PrintFile {
     public boolean isDocument() {
         String ext = getFileExtension();
         return "doc".equals(ext) || "docx".equals(ext) || "xls".equals(ext) || "xlsx".equals(ext) || "ppt".equals(ext) || "pptx".equals(ext);
+    }
+
+    // 状态检查便利方法
+    public boolean isUploading() {
+        return this.status != null && this.status.equals(STATUS_UPLOADING);
+    }
+
+    public boolean isUploaded() {
+        return this.status != null && this.status.equals(STATUS_UPLOADED);
+    }
+
+    public boolean isCalculatingMd5() {
+        return this.status != null && this.status.equals(STATUS_CALCULATING_MD5);
+    }
+
+    public boolean isParsing() {
+        return this.status != null && this.status.equals(STATUS_PARSING);
+    }
+
+    public boolean isCompleted() {
+        return this.status != null && this.status.equals(STATUS_COMPLETED);
+    }
+
+    public boolean isFailed() {
+        return this.status != null && this.status.equals(STATUS_FAILED);
+    }
+
+    public boolean isProcessing() {
+        return isCalculatingMd5() || isParsing();
     }
 }

@@ -327,3 +327,116 @@
 .action-buttons button {
   flex: 1;
 }
+
+/* 确认弹窗 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  width: 600rpx;
+  max-height: 80vh;
+  background-color: white;
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+
+.modal-header {
+  padding: 40rpx 30rpx 20rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+  text-align: center;
+}
+
+.modal-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.modal-body {
+  padding: 30rpx;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.confirm-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.confirm-item:last-child {
+  border-bottom: none;
+}
+
+.confirm-label {
+  font-size: 28rpx;
+  color: #666;
+  flex-shrink: 0;
+  margin-right: 20rpx;
+}
+
+.confirm-value {
+  font-size: 28rpx;
+  color: #333;
+  text-align: right;
+  flex: 1;
+  word-break: break-all;
+}
+
+.confirm-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx 0 20rpx;
+  border-top: 2rpx solid #f0f0f0;
+  margin-top: 20rpx;
+}
+
+.confirm-total .total-label {
+  font-size: 32rpx;
+  color: #333;
+  font-weight: bold;
+}
+
+.confirm-total .total-amount {
+  font-size: 36rpx;
+  color: #ff4d4f;
+  font-weight: bold;
+}
+
+.modal-footer {
+  display: flex;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.btn-cancel,
+.btn-confirm {
+  flex: 1;
+  padding: 30rpx;
+  border: none;
+  background-color: transparent;
+  font-size: 30rpx;
+  border-radius: 0;
+}
+
+.btn-cancel {
+  color: #666;
+  border-right: 1rpx solid #f0f0f0;
+}
+
+.btn-confirm {
+  color: #1890ff;
+  font-weight: bold;
+}

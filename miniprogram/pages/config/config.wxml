@@ -11,9 +11,10 @@
         <view class="file-details">
           <text class="file-name">{{fileInfo.name}}</text>
           <text class="file-desc">{{fileInfo.size}}</text>
-          <text class="file-pages" wx:if="{{fileInfo.status === 3}}">共 {{fileInfo.pageCount}} 页 ✅</text>
-          <text class="file-pages parsing" wx:elif="{{fileInfo.status === 2}}">正在解析页数... ⏳</text>
-          <text class="file-pages error" wx:elif="{{fileInfo.status === 4}}">解析失败，预计 {{fileInfo.pageCount}} 页 ❌</text>
+          <text class="file-pages" wx:if="{{fileInfo.status === 4}}">共 {{fileInfo.pageCount}} 页 ✅</text>
+          <text class="file-pages parsing" wx:elif="{{fileInfo.status === 2}}">正在计算MD5... ⏳</text>
+          <text class="file-pages parsing" wx:elif="{{fileInfo.status === 3}}">正在解析页数... ⏳</text>
+          <text class="file-pages error" wx:elif="{{fileInfo.status === 5}}">处理失败，预计 {{fileInfo.pageCount}} 页 ❌</text>
           <text class="file-pages" wx:else>预计 {{fileInfo.pageCount}} 页</text>
         </view>
       </view>
@@ -151,9 +152,62 @@
     <!-- 操作按钮 -->
     <view class="action-buttons">
       <button class="btn-secondary" bindtap="goBack">返回</button>
-      <button class="btn-primary" bindtap="createOrder" disabled="{{!canCreateOrder}}">
-        确认订单
+      <button class="btn-primary" bindtap="createOrder" disabled="{{!canCreateOrder || creatingOrder}}">
+        {{creatingOrder ? '创建中...' : '确认订单'}}
       </button>
+    </view>
+  </view>
+
+  <!-- 确认弹窗 -->
+  <view class="modal-overlay" wx:if="{{showConfirmModal}}" bindtap="cancelCreateOrder">
+    <view class="modal-content" catchtap="">
+      <view class="modal-header">
+        <text class="modal-title">确认订单信息</text>
+      </view>
+
+      <view class="modal-body">
+        <view class="confirm-item">
+          <text class="confirm-label">文件名称</text>
+          <text class="confirm-value">{{fileInfo.name}}</text>
+        </view>
+        <view class="confirm-item">
+          <text class="confirm-label">打印页数</text>
+          <text class="confirm-value">{{calculatedPages}}页</text>
+        </view>
+        <view class="confirm-item">
+          <text class="confirm-label">打印份数</text>
+          <text class="confirm-value">{{printConfig.copies}}份</text>
+        </view>
+        <view class="confirm-item">
+          <text class="confirm-label">颜色</text>
+          <text class="confirm-value">{{getColorText(printConfig.isColor)}}</text>
+        </view>
+        <view class="confirm-item">
+          <text class="confirm-label">单双面</text>
+          <text class="confirm-value">{{getSideText(printConfig.isDoubleSide)}}</text>
+        </view>
+        <view class="confirm-item">
+          <text class="confirm-label">纸张规格</text>
+          <text class="confirm-value">{{printConfig.paperSize}}</text>
+        </view>
+        <view class="confirm-item">
+          <text class="confirm-label">页数范围</text>
+          <text class="confirm-value">{{getPageRangeText(printConfig.pageRangeType, printConfig.pageRange, fileInfo.pageCount)}}</text>
+        </view>
+        <view class="confirm-item" wx:if="{{printConfig.remark}}">
+          <text class="confirm-label">备注</text>
+          <text class="confirm-value">{{printConfig.remark}}</text>
+        </view>
+        <view class="confirm-total">
+          <text class="total-label">总金额</text>
+          <text class="total-amount">¥{{totalAmount}}</text>
+        </view>
+      </view>
+
+      <view class="modal-footer">
+        <button class="btn-cancel" bindtap="cancelCreateOrder">取消</button>
+        <button class="btn-confirm" bindtap="confirmCreateOrder">确认创建</button>
+      </view>
     </view>
   </view>
 </view>

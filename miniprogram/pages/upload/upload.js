@@ -7,7 +7,9 @@ Page({
     uploading: false,
     uploadProgress: 0,
     showPreview: false,
-    previewPages: []
+    previewPages: [],
+    pollingFileInfo: false,
+    pollingMessage: ''
   },
 
   onLoad() {
@@ -19,26 +21,53 @@ Page({
     console.log('文件上传页面渲染完成');
   },
 
+  onUnload() {
+    // 页面卸载时清理轮询定时器
+    if (this.pollingTimer) {
+      clearInterval(this.pollingTimer);
+      this.pollingTimer = null;
+      wx.hideLoading();
+    }
+  },
+
   /**
    * 选择文件
    */
   chooseFile() {
     const that = this;
-    
-    wx.showActionSheet({
-      itemList: ['从相册选择', '拍照', '选择文件'],
-      success(res) {
-        if (res.tapIndex === 0) {
-          // 从相册选择
-          that.chooseImage('album');
-        } else if (res.tapIndex === 1) {
-          // 拍照
-          that.chooseImage('camera');
-        } else if (res.tapIndex === 2) {
-          // 选择文件
-          that.chooseDocument();
-        }
+
+    // 先验证token是否有效
+    app.validateToken().then(isValid => {
+      if (!isValid) {
+        // token无效，跳转到登录页面
+        wx.navigateTo({
+          url: '/pages/login/login?redirect=upload'
+        });
+        return;
       }
+
+      // token有效，显示文件选择菜单
+      wx.showActionSheet({
+        itemList: ['从相册选择', '拍照', '选择文件'],
+        success(res) {
+          if (res.tapIndex === 0) {
+            // 从相册选择
+            that.chooseImage('album');
+          } else if (res.tapIndex === 1) {
+            // 拍照
+            that.chooseImage('camera');
+          } else if (res.tapIndex === 2) {
+            // 选择文件
+            that.chooseDocument();
+          }
+        }
+      });
+    }).catch(err => {
+      console.error('Token验证失败:', err);
+      app.showError('登录验证失败，请重新登录');
+      wx.navigateTo({
+        url: '/pages/login/login?redirect=upload'
+      });
     });
   },
 
@@ -87,52 +116,40 @@ Page({
    * 处理文件选择
    */
   handleFileSelected(filePath, fileType, fileName, fileSize) {
-    // 先验证token是否有效
-    app.validateToken().then(isValid => {
-      if (!isValid) {
-        // token无效，跳转到登录页面
-        wx.navigateTo({
-          url: '/pages/login/login?redirect=upload'
+    // 获取文件信息
+    wx.getFileInfo({
+      filePath: filePath,
+      success: (res) => {
+        const actualFileType = fileType || this.getFileTypeFromPath(filePath);
+        const fileInfo = {
+          path: filePath,
+          name: fileName || this.getFileNameFromPath(filePath),
+          size: fileSize || res.size,
+          type: actualFileType,
+          uploaded: false,
+          serverId: null,
+          // 预处理显示数据
+          icon: this.getFileIcon(actualFileType),
+          sizeText: this.formatFileSize(fileSize || res.size),
+          typeName: this.getFileTypeName(actualFileType),
+          isImage: this.isImageFile(actualFileType)
+        };
+
+        this.setData({
+          fileInfo: fileInfo,
+          showPreview: true
         });
-        return;
+
+        // 生成本地预览
+        this.generateLocalPreview(fileInfo);
+
+        // 立即上传文件到服务器
+        this.uploadFileToServer(fileInfo);
+      },
+      fail: (err) => {
+        console.error('获取文件信息失败：', err);
+        app.showError('获取文件信息失败');
       }
-      
-      // token有效，继续处理文件
-      // 获取文件信息
-      wx.getFileInfo({
-        filePath: filePath,
-        success: (res) => {
-          const fileType = fileType || this.getFileTypeFromPath(filePath);
-          const fileInfo = {
-            path: filePath,
-            name: fileName || this.getFileNameFromPath(filePath),
-            size: fileSize || res.size,
-            type: fileType,
-            uploaded: false,
-            serverId: null,
-            // 预处理显示数据
-            icon: this.getFileIcon(fileType),
-            sizeText: this.formatFileSize(fileSize || res.size),
-            typeName: this.getFileTypeName(fileType),
-            isImage: this.isImageFile(fileType)
-          };
-
-          this.setData({
-            fileInfo: fileInfo,
-            showPreview: true
-          });
-
-          // 生成本地预览
-          this.generateLocalPreview(fileInfo);
-
-          // 立即上传文件到服务器
-          this.uploadFileToServer(fileInfo);
-        },
-        fail: (err) => {
-          console.error('获取文件信息失败：', err);
-          app.showError('获取文件信息失败');
-        }
-      });
     });
   },
 
@@ -178,25 +195,8 @@ Page({
    * 上传文件到服务器
    */
   uploadFileToServer(fileInfo) {
-    // 先验证token是否有效
-    app.validateToken().then(isValid => {
-      if (!isValid) {
-        // token无效，跳转到登录页面
-        wx.navigateTo({
-          url: '/pages/login/login?redirect=upload'
-        });
-        return;
-      }
-
-      // token有效，开始上传
-      this.performFileUpload(fileInfo);
-    }).catch(err => {
-      console.error('Token验证失败:', err);
-      app.showError('登录验证失败，请重新登录');
-      wx.navigateTo({
-        url: '/pages/login/login?redirect=upload'
-      });
-    });
+    // 直接开始上传（token已在chooseFile中验证）
+    this.performFileUpload(fileInfo);
   },
 
   /**
@@ -285,26 +285,38 @@ Page({
    */
   startPollingFileInfo(fileId) {
     console.log('开始轮询获取文件信息', fileId);
-    
+
+    // 显示加载状态，禁用页面操作
+    this.setData({
+      pollingFileInfo: true,
+      pollingMessage: '正在处理文件，请稍候...'
+    });
+
+    // 显示加载提示
+    wx.showLoading({
+      title: '处理文件中...',
+      mask: true
+    });
+
     // 设置轮询间隔（毫秒）
     const pollingInterval = 2000; // 2秒
-    
-    // 最大轮询次数
-    const maxPollingCount = 30; // 最多轮询30次，约1分钟
-    
+
+    // 超时时间（毫秒）
+    const timeoutDuration = 30000; // 30秒
+
     let pollingCount = 0;
-    
+    const maxPollingCount = Math.ceil(timeoutDuration / pollingInterval);
+
     // 创建轮询定时器
     const pollingTimer = setInterval(() => {
       pollingCount++;
-      
-      // 超过最大轮询次数，停止轮询
+
+      // 超过最大轮询次数，停止轮询并超时
       if (pollingCount > maxPollingCount) {
-        clearInterval(pollingTimer);
-        console.log('轮询次数达到上限，停止轮询');
+        this.stopPollingWithTimeout(pollingTimer);
         return;
       }
-      
+
       // 发起请求获取文件信息
       this.getFileInfo(fileId).then(fileInfo => {
         // 更新文件信息
@@ -314,51 +326,144 @@ Page({
           status: fileInfo.status,
           serverData: fileInfo
         };
-        
+
         this.setData({
           fileInfo: updatedFileInfo
         });
-        
+
         // 更新全局的临时文件信息
         app.globalData.tempFileInfo = updatedFileInfo;
-        
-        // 如果文件解析完成，停止轮询
-        if (fileInfo.status === 3) { // 3-解析成功
-          clearInterval(pollingTimer);
-          console.log('文件解析完成，停止轮询');
-          console.log('更新后的文件信息：', updatedFileInfo);
+
+        // 如果文件处理完成，停止轮询
+        if (fileInfo.status === 4) { // 4-处理完成
+          this.stopPollingWithSuccess(pollingTimer, updatedFileInfo);
         }
-        
-        // 如果文件解析失败，停止轮询
-        if (fileInfo.status === 4) { // 4-解析失败
-          clearInterval(pollingTimer);
-          console.log('文件解析失败，停止轮询');
-          app.showError('文件解析失败：' + (fileInfo.parseError || '未知错误'));
+
+        // 如果文件处理失败，停止轮询
+        if (fileInfo.status === 5) { // 5-处理失败
+          this.stopPollingWithError(pollingTimer, fileInfo.parseError || '文件处理失败');
         }
-        
+
       }).catch(err => {
         console.error('获取文件信息失败：', err);
         // 如果是401错误，说明token已过期
         if (err.message && err.message.includes('401')) {
-          clearInterval(pollingTimer);
-          app.logout();
-          wx.showModal({
-            title: '登录已过期',
-            content: '您的登录已过期，请重新登录',
-            showCancel: false,
-            confirmText: '重新登录',
-            success: () => {
-              wx.navigateTo({
-                url: '/pages/login/login?redirect=upload'
-              });
-            }
+          this.stopPollingWithAuthError(pollingTimer);
+        }
+        // 其他错误继续轮询，直到超时
+      });
+    }, pollingInterval);
+
+    // 保存定时器引用，以便在页面卸载时清理
+    this.pollingTimer = pollingTimer;
+  },
+
+  /**
+   * 轮询成功停止
+   */
+  stopPollingWithSuccess(pollingTimer, fileInfo) {
+    clearInterval(pollingTimer);
+    this.pollingTimer = null;
+
+    wx.hideLoading();
+
+    this.setData({
+      pollingFileInfo: false,
+      pollingMessage: ''
+    });
+
+    console.log('文件处理完成，停止轮询');
+    console.log('更新后的文件信息：', fileInfo);
+
+    // 显示成功提示
+    wx.showToast({
+      title: '文件处理完成',
+      icon: 'success',
+      duration: 1500
+    });
+  },
+
+  /**
+   * 轮询错误停止
+   */
+  stopPollingWithError(pollingTimer, errorMessage) {
+    clearInterval(pollingTimer);
+    this.pollingTimer = null;
+
+    wx.hideLoading();
+
+    this.setData({
+      pollingFileInfo: false,
+      pollingMessage: ''
+    });
+
+    console.log('文件处理失败，停止轮询');
+    app.showError('文件处理失败：' + errorMessage);
+  },
+
+  /**
+   * 轮询超时停止
+   */
+  stopPollingWithTimeout(pollingTimer) {
+    clearInterval(pollingTimer);
+    this.pollingTimer = null;
+
+    wx.hideLoading();
+
+    this.setData({
+      pollingFileInfo: false,
+      pollingMessage: ''
+    });
+
+    console.log('轮询超时，停止轮询');
+
+    wx.showModal({
+      title: '处理超时',
+      content: '文件处理时间较长，您可以稍后在订单中查看处理结果，或重新上传文件',
+      confirmText: '继续配置',
+      cancelText: '重新上传',
+      success: (res) => {
+        if (res.cancel) {
+          // 重新上传
+          this.setData({
+            fileInfo: {},
+            uploading: false,
+            uploadProgress: 0
           });
         }
-      });
-      
-    }, pollingInterval);
+        // 如果选择继续配置，保持当前状态
+      }
+    });
   },
-  
+
+  /**
+   * 轮询认证错误停止
+   */
+  stopPollingWithAuthError(pollingTimer) {
+    clearInterval(pollingTimer);
+    this.pollingTimer = null;
+
+    wx.hideLoading();
+
+    this.setData({
+      pollingFileInfo: false,
+      pollingMessage: ''
+    });
+
+    app.logout();
+    wx.showModal({
+      title: '登录已过期',
+      content: '您的登录已过期，请重新登录',
+      showCancel: false,
+      confirmText: '重新登录',
+      success: () => {
+        wx.navigateTo({
+          url: '/pages/login/login?redirect=upload'
+        });
+      }
+    });
+  },
+
   /**
    * 获取文件信息
    */

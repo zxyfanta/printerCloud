@@ -73,12 +73,15 @@ public class PayService {
         
         // 检查订单状态
         boolean isPaid = order.getStatus() > 0 && order.getPayTime() != null;
-        
+
         Map<String, Object> paymentResult = new HashMap<>();
         paymentResult.put("status", isPaid ? "SUCCESS" : "WAITING");
-        
+
         if (isPaid) {
-            paymentResult.put("verifyCode", order.getVerifyCode());
+            // 只有支付成功且有取件码时才返回取件码
+            if (order.getVerifyCode() != null && !order.getVerifyCode().isEmpty()) {
+                paymentResult.put("verifyCode", order.getVerifyCode());
+            }
             paymentResult.put("payTime", order.getPayTime());
         }
         
@@ -134,31 +137,37 @@ public class PayService {
      */
     private Map<String, Object> generatePaymentData(PrintOrder order, boolean sandbox) {
         Map<String, Object> paymentData = new HashMap<>();
-        
+
         // 使用配置的沙盒环境设置
         boolean useSandbox = sandbox || wechatPayConfig.getSandboxEnabled();
-        
+
         // 生成随机字符串
         String nonceStr = generateNonceStr();
         // 生成时间戳
         String timeStamp = String.valueOf(System.currentTimeMillis() / 1000);
         // 生成商户订单号
         String outTradeNo = generateOutTradeNo(order.getId());
-        
+
+        // 计算总金额（单位：分）
+        int totalFee = order.getAmount().multiply(new BigDecimal("100")).intValue();
+
         // 设置支付参数
         paymentData.put("timeStamp", timeStamp);
         paymentData.put("nonceStr", nonceStr);
         paymentData.put("package", "prepay_id=wx" + timeStamp);
         paymentData.put("signType", "MD5");
         paymentData.put("paySign", generatePaySign(timeStamp, nonceStr, outTradeNo, useSandbox));
-        
+        paymentData.put("total_fee", totalFee); // 添加总金额参数
+        paymentData.put("out_trade_no", outTradeNo); // 添加商户订单号
+        paymentData.put("body", "云打印服务-" + order.getFileName()); // 添加商品描述
+
         // 沙盒环境标记
         paymentData.put("sandbox", useSandbox);
-        
+
         // 记录日志
-        logger.info("生成支付参数: orderId={}, outTradeNo={}, sandbox={}", 
-                order.getId(), outTradeNo, useSandbox);
-        
+        logger.info("生成支付参数: orderId={}, outTradeNo={}, totalFee={}, sandbox={}",
+                order.getId(), outTradeNo, totalFee, useSandbox);
+
         return paymentData;
     }
     

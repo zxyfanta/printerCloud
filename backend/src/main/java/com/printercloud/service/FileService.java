@@ -13,14 +13,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -60,25 +60,30 @@ public class FileService {
             throw new IllegalArgumentException("文件名不能为空");
         }
         originalFilename = StringUtils.cleanPath(originalFilename);
-        
+
         // 生成新的文件名
         String fileExtension = getFileExtension(originalFilename);
         String newFileName = UUID.randomUUID().toString() + "." + fileExtension;
-        
+
         // 创建上传目录
         Path uploadDir = Paths.get(uploadPath);
         if (!Files.exists(uploadDir)) {
             Files.createDirectories(uploadDir);
         }
-        
-        // 保存文件
+
+        // 先保存文件到磁盘（不计算MD5，快速响应）
         Path targetLocation = uploadDir.resolve(newFileName);
-        Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
-        
-        // 计算文件MD5
-        String fileMd5 = calculateMD5(file.getBytes());
-        
-        // 创建文件记录
+        try (InputStream inputStream = file.getInputStream();
+             FileOutputStream fos = new FileOutputStream(targetLocation.toFile())) {
+
+            byte[] buffer = new byte[8192];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                fos.write(buffer, 0, bytesRead);
+            }
+        }
+
+        // 创建文件记录（不包含MD5）
         PrintFile printFile = new PrintFile();
         printFile.setUserId(userId);
         printFile.setOriginalName(originalFilename);
@@ -86,15 +91,14 @@ public class FileService {
         printFile.setFilePath(targetLocation.toString());
         printFile.setFileSize(file.getSize());
         printFile.setFileType(file.getContentType());
-        printFile.setFileMd5(fileMd5);
-        printFile.setStatus(1); // 上传成功
+        printFile.setStatus(PrintFile.STATUS_UPLOADED); // 上传成功
 
         // 保存文件记录
         PrintFile savedFile = fileRepository.save(printFile);
 
-        // 异步解析文件信息（页数等）
-        fileParseService.parseFileAsync(savedFile.getId());
-        
+        // 异步处理文件（计算MD5 + 解析文件信息）
+        fileParseService.processFileAsync(savedFile.getId());
+
         // 如果是PDF文件，直接设置预览路径
         if (savedFile.isPdf()) {
             savedFile.setPreviewPath(savedFile.getFilePath());
@@ -190,22 +194,7 @@ public class FileService {
         return "";
     }
 
-    /**
-     * 计算文件MD5
-     */
-    private String calculateMD5(byte[] fileBytes) {
-        try {
-            MessageDigest md = MessageDigest.getInstance("MD5");
-            byte[] digest = md.digest(fileBytes);
-            StringBuilder sb = new StringBuilder();
-            for (byte b : digest) {
-                sb.append(String.format("%02x", b));
-            }
-            return sb.toString();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("MD5算法不可用", e);
-        }
-    }
+
 
     /**
      * 检查文件是否存在（根据MD5）

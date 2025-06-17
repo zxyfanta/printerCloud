@@ -25,7 +25,9 @@ Page({
     calculatedPages: 1,
     unitPrice: 0.1,
     totalAmount: 0.1,
-    canCreateOrder: true
+    canCreateOrder: true,
+    showConfirmModal: false,
+    creatingOrder: false
   },
 
   onLoad(options) {
@@ -140,8 +142,8 @@ Page({
         this.calculatePrice();
         this.checkCanCreateOrder();
 
-        // 如果文件还在解析中，定时查询状态
-        if (serverFileInfo.status === 2) {
+        // 如果文件还在处理中，定时查询状态
+        if (serverFileInfo.status === 2 || serverFileInfo.status === 3) {
           this.startPollingFileStatus(fileId);
         }
 
@@ -201,35 +203,35 @@ Page({
         if (res.code === 200) {
           const serverFileInfo = res.data;
 
-          if (serverFileInfo.status === 3) {
-            // 解析成功，更新页数
+          if (serverFileInfo.status === 4) {
+            // 处理完成，更新页数
             clearInterval(pollInterval);
 
             this.setData({
               'fileInfo.pageCount': serverFileInfo.pageCount,
-              'fileInfo.status': 3,
+              'fileInfo.status': 4,
               calculatedPages: serverFileInfo.pageCount
             });
 
             this.calculatePrice();
-            app.showSuccess('文件解析完成');
+            app.showSuccess('文件处理完成');
 
-          } else if (serverFileInfo.status === 4) {
-            // 解析失败
+          } else if (serverFileInfo.status === 5) {
+            // 处理失败
             clearInterval(pollInterval);
 
             this.setData({
-              'fileInfo.status': 4,
+              'fileInfo.status': 5,
               'fileInfo.parseError': serverFileInfo.parseError
             });
 
-            app.showError('文件解析失败，使用估算页数');
+            app.showError('文件处理失败，使用估算页数');
           }
         }
       }).catch(err => {
         console.error('查询文件状态失败：', err);
       });
-    }, 3000); // 每3秒查询一次
+    }, 2000); // 每2秒查询一次
 
     // 30秒后停止查询
     setTimeout(() => {
@@ -447,20 +449,88 @@ Page({
       return;
     }
 
-    // 跳转到确认页面
+    // 显示确认弹窗
+    this.setData({
+      showConfirmModal: true
+    });
+  },
+
+  /**
+   * 确认创建订单
+   */
+  confirmCreateOrder() {
+    this.setData({
+      showConfirmModal: false,
+      creatingOrder: true
+    });
+
+    wx.showLoading({
+      title: '创建订单中...',
+      mask: true
+    });
+
+    // 准备订单数据
     const orderData = {
-      fileInfo: this.data.fileInfo,
-      printConfig: this.data.printConfig,
-      calculatedPages: this.data.calculatedPages,
-      unitPrice: this.data.unitPrice,
-      totalAmount: this.data.totalAmount
+      userId: app.globalData.userInfo?.id,
+      userName: app.globalData.userInfo?.username,
+      fileId: this.data.fileInfo.id || null,
+      fileName: this.data.fileInfo.name,
+      fileType: this.data.fileInfo.type || 'unknown',
+      actualPages: this.data.calculatedPages,
+      copies: this.data.printConfig.copies,
+      isColor: this.data.printConfig.isColor,
+      isDoubleSide: this.data.printConfig.isDoubleSide,
+      paperSize: this.data.printConfig.paperSize,
+      pageRange: this.data.printConfig.pageRangeType === 'all' ?
+                 `1-${this.data.calculatedPages}` :
+                 this.data.printConfig.pageRange,
+      remark: this.data.printConfig.remark,
+      amount: this.data.totalAmount
     };
 
-    // 将订单数据存储到全局
-    app.globalData.tempOrderData = orderData;
+    // 调用后端API创建订单
+    app.request({
+      url: '/orders',
+      method: 'POST',
+      data: orderData
+    }).then(res => {
+      wx.hideLoading();
+      this.setData({ creatingOrder: false });
 
-    wx.navigateTo({
-      url: '/pages/confirm/confirm'
+      if (res.code === 200) {
+        const orderId = res.data.id;
+
+        // 显示成功提示
+        wx.showToast({
+          title: '订单创建成功',
+          icon: 'success',
+          duration: 1500
+        });
+
+        // 跳转到支付页面
+        setTimeout(() => {
+          wx.redirectTo({
+            url: `/pages/payment/payment?orderId=${orderId}`
+          });
+        }, 1500);
+
+      } else {
+        app.showError(res.message || '创建订单失败');
+      }
+    }).catch(err => {
+      wx.hideLoading();
+      this.setData({ creatingOrder: false });
+      console.error('创建订单失败：', err);
+      app.showError('创建订单失败，请重试');
+    });
+  },
+
+  /**
+   * 取消创建订单
+   */
+  cancelCreateOrder() {
+    this.setData({
+      showConfirmModal: false
     });
   },
 
@@ -494,6 +564,31 @@ Page({
       return (size / 1024).toFixed(1) + ' KB';
     } else {
       return (size / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+  },
+
+  /**
+   * 获取颜色文本
+   */
+  getColorText(isColor) {
+    return isColor ? '彩色' : '黑白';
+  },
+
+  /**
+   * 获取单双面文本
+   */
+  getSideText(isDoubleSide) {
+    return isDoubleSide ? '双面' : '单面';
+  },
+
+  /**
+   * 获取页数范围文本
+   */
+  getPageRangeText(pageRangeType, pageRange, totalPages) {
+    if (pageRangeType === 'all') {
+      return `全部页面 (${totalPages}页)`;
+    } else {
+      return `自定义: ${pageRange}`;
     }
   }
 });
