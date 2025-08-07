@@ -1,170 +1,243 @@
 package com.printercloud.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.Data;
 
-import jakarta.persistence.*;
+import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
  * 价格配置实体类
  * 
- * @author PrinterCloud
- * @since 2024-01-01
+ * @author PrinterCloud Team
+ * @since 2024-12-07
  */
+@Data
 @Entity
-@Table(name = "pc_price_config")
+@Table(name = "price_config", indexes = {
+    @Index(name = "idx_config_key", columnList = "config_key", unique = true),
+    @Index(name = "idx_category", columnList = "category"),
+    @Index(name = "idx_status", columnList = "status")
+})
 public class PriceConfig {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "config_key", unique = true, nullable = false)
+    /**
+     * 配置键（唯一标识）
+     */
+    @Column(name = "config_key", nullable = false, unique = true, length = 100)
     private String configKey;
 
-    @Column(name = "config_name", nullable = false)
+    /**
+     * 配置名称
+     */
+    @Column(name = "config_name", nullable = false, length = 200)
     private String configName;
 
-    @Column(name = "price", nullable = false, precision = 10, scale = 2)
-    private BigDecimal price;
+    /**
+     * 配置分类
+     */
+    @Column(name = "category", nullable = false, length = 50)
+    private String category;
 
-    @Column(name = "unit")
-    private String unit;
+    /**
+     * 价格值
+     */
+    @Column(name = "price_value", nullable = false, precision = 10, scale = 2)
+    private BigDecimal priceValue;
 
-    @Column(name = "description")
+    /**
+     * 单位
+     */
+    @Column(name = "unit", length = 20)
+    private String unit = "元/页";
+
+    /**
+     * 描述
+     */
+    @Column(name = "description", length = 500)
     private String description;
 
-    @Column(name = "is_active")
-    private Boolean isActive;
+    /**
+     * 状态：0-禁用，1-启用
+     */
+    @Column(name = "status")
+    private Integer status = 1;
 
+    /**
+     * 排序
+     */
     @Column(name = "sort_order")
-    private Integer sortOrder;
+    private Integer sortOrder = 0;
 
-    @Column(name = "create_time")
+    /**
+     * 创建时间
+     */
+    @Column(name = "created_time", nullable = false, updatable = false)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime createTime;
+    private LocalDateTime createdTime;
 
-    @Column(name = "update_time")
+    /**
+     * 更新时间
+     */
+    @Column(name = "updated_time")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime updateTime;
+    private LocalDateTime updatedTime;
 
-    @Column(name = "deleted")
-    private Boolean deleted;
+    /**
+     * 创建者
+     */
+    @Column(name = "created_by", length = 50)
+    private String createdBy;
 
-    // 构造函数
-    public PriceConfig() {
-        this.createTime = LocalDateTime.now();
-        this.updateTime = LocalDateTime.now();
-        this.deleted = false;
-        this.isActive = true;
-        this.sortOrder = 0;
-    }
+    /**
+     * 更新者
+     */
+    @Column(name = "updated_by", length = 50)
+    private String updatedBy;
 
-    public PriceConfig(String configKey, String configName, BigDecimal price, String unit) {
-        this();
-        this.configKey = configKey;
-        this.configName = configName;
-        this.price = price;
-        this.unit = unit;
-    }
-
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getConfigKey() {
-        return configKey;
-    }
-
-    public void setConfigKey(String configKey) {
-        this.configKey = configKey;
-    }
-
-    public String getConfigName() {
-        return configName;
-    }
-
-    public void setConfigName(String configName) {
-        this.configName = configName;
-    }
-
-    public BigDecimal getPrice() {
-        return price;
-    }
-
-    public void setPrice(BigDecimal price) {
-        this.price = price;
-    }
-
-    public String getUnit() {
-        return unit;
-    }
-
-    public void setUnit(String unit) {
-        this.unit = unit;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public Boolean getIsActive() {
-        return isActive;
-    }
-
-    public void setIsActive(Boolean isActive) {
-        this.isActive = isActive;
-    }
-
-    public Integer getSortOrder() {
-        return sortOrder;
-    }
-
-    public void setSortOrder(Integer sortOrder) {
-        this.sortOrder = sortOrder;
-    }
-
-    public LocalDateTime getCreateTime() {
-        return createTime;
-    }
-
-    public void setCreateTime(LocalDateTime createTime) {
-        this.createTime = createTime;
-    }
-
-    public LocalDateTime getUpdateTime() {
-        return updateTime;
-    }
-
-    public void setUpdateTime(LocalDateTime updateTime) {
-        this.updateTime = updateTime;
-    }
-
-    public Boolean getDeleted() {
-        return deleted;
-    }
-
-    public void setDeleted(Boolean deleted) {
-        this.deleted = deleted;
+    @PrePersist
+    protected void onCreate() {
+        this.createdTime = LocalDateTime.now();
+        this.updatedTime = LocalDateTime.now();
+        if (this.status == null) {
+            this.status = 1;
+        }
+        if (this.sortOrder == null) {
+            this.sortOrder = 0;
+        }
+        if (this.unit == null) {
+            this.unit = "元/页";
+        }
     }
 
     @PreUpdate
-    public void preUpdate() {
-        this.updateTime = LocalDateTime.now();
+    protected void onUpdate() {
+        this.updatedTime = LocalDateTime.now();
     }
 
-    // 便利方法
-    public boolean isActive() {
-        return this.isActive != null && this.isActive && !this.deleted;
+    /**
+     * 价格配置分类枚举
+     */
+    public enum Category {
+        PRINT("PRINT", "打印价格"),
+        PAPER("PAPER", "纸张价格"),
+        SERVICE("SERVICE", "服务费用"),
+        DISCOUNT("DISCOUNT", "折扣配置");
+
+        private final String code;
+        private final String description;
+
+        Category(String code, String description) {
+            this.code = code;
+            this.description = description;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+    }
+
+    /**
+     * 状态枚举
+     */
+    public enum Status {
+        DISABLED(0, "禁用"),
+        ENABLED(1, "启用");
+
+        private final Integer code;
+        private final String description;
+
+        Status(Integer code, String description) {
+            this.code = code;
+            this.description = description;
+        }
+
+        public Integer getCode() {
+            return code;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+    }
+
+    /**
+     * 预定义价格配置键
+     */
+    public static class ConfigKey {
+        // 黑白打印价格
+        public static final String BW_SINGLE_A4 = "print.bw.single.a4";
+        public static final String BW_DOUBLE_A4 = "print.bw.double.a4";
+        public static final String BW_SINGLE_A3 = "print.bw.single.a3";
+        public static final String BW_DOUBLE_A3 = "print.bw.double.a3";
+        
+        // 彩色打印价格
+        public static final String COLOR_SINGLE_A4 = "print.color.single.a4";
+        public static final String COLOR_DOUBLE_A4 = "print.color.double.a4";
+        public static final String COLOR_SINGLE_A3 = "print.color.single.a3";
+        public static final String COLOR_DOUBLE_A3 = "print.color.double.a3";
+        
+        // 服务费用
+        public static final String SERVICE_FEE = "service.fee";
+        public static final String DELIVERY_FEE = "delivery.fee";
+        
+        // 折扣配置
+        public static final String BULK_DISCOUNT_THRESHOLD = "discount.bulk.threshold";
+        public static final String BULK_DISCOUNT_RATE = "discount.bulk.rate";
+        public static final String VIP_DISCOUNT_RATE = "discount.vip.rate";
+    }
+
+    /**
+     * 判断是否启用
+     */
+    public boolean isEnabled() {
+        return Status.ENABLED.getCode().equals(this.status);
+    }
+
+    /**
+     * 判断是否禁用
+     */
+    public boolean isDisabled() {
+        return Status.DISABLED.getCode().equals(this.status);
+    }
+
+    /**
+     * 获取状态描述
+     */
+    public String getStatusDescription() {
+        for (Status s : Status.values()) {
+            if (s.getCode().equals(this.status)) {
+                return s.getDescription();
+            }
+        }
+        return "未知";
+    }
+
+    /**
+     * 获取分类描述
+     */
+    public String getCategoryDescription() {
+        for (Category c : Category.values()) {
+            if (c.getCode().equals(this.category)) {
+                return c.getDescription();
+            }
+        }
+        return this.category;
+    }
+
+    /**
+     * 格式化价格显示
+     */
+    public String getFormattedPrice() {
+        return this.priceValue + " " + this.unit;
     }
 }

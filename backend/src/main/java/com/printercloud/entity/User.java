@@ -1,205 +1,246 @@
 package com.printercloud.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Data;
 
-import jakarta.persistence.*;
+import javax.persistence.*;
 import java.time.LocalDateTime;
 
 /**
  * 用户实体类
  * 
- * @author PrinterCloud
- * @since 2024-01-01
+ * @author PrinterCloud Team
+ * @since 2024-12-07
  */
+@Data
 @Entity
-@Table(name = "pc_user")
+@Table(name = "users", indexes = {
+    @Index(name = "idx_open_id", columnList = "open_id", unique = true),
+    @Index(name = "idx_union_id", columnList = "union_id"),
+    @Index(name = "idx_phone", columnList = "phone"),
+    @Index(name = "idx_created_time", columnList = "created_time")
+})
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "open_id", unique = true)
+    /**
+     * 微信OpenID
+     */
+    @Column(name = "open_id", nullable = false, unique = true, length = 64)
     private String openId;
 
-    @Column(name = "union_id")
+    /**
+     * 微信UnionID
+     */
+    @Column(name = "union_id", length = 64)
     private String unionId;
 
-    @Column(name = "username", unique = true)
+    /**
+     * 用户名
+     */
+    @Column(name = "username", length = 50)
     private String username;
 
-    @Column(name = "password")
-    @JsonIgnore
-    private String password;
-
-    @Column(name = "nickname")
+    /**
+     * 昵称
+     */
+    @Column(name = "nickname", length = 100)
     private String nickname;
 
-    @Column(name = "avatar_url")
+    /**
+     * 头像URL
+     */
+    @Column(name = "avatar_url", length = 500)
     private String avatarUrl;
 
+    /**
+     * 性别：0-未知，1-男，2-女
+     */
     @Column(name = "gender")
-    private Integer gender; // 0-未知，1-男，2-女
+    private Integer gender = 0;
 
-    @Column(name = "phone")
+    /**
+     * 手机号
+     */
+    @Column(name = "phone", length = 20)
     private String phone;
 
-    @Column(name = "role")
-    private String role; // USER, ADMIN, SUPER_ADMIN
+    /**
+     * 用户角色：USER-普通用户，ADMIN-管理员
+     */
+    @Column(name = "role", length = 20)
+    private String role = "USER";
 
+    /**
+     * 用户状态：0-禁用，1-正常
+     */
     @Column(name = "status")
-    private Integer status; // 0-正常，1-禁用
+    private Integer status = 1;
 
-    @Column(name = "create_time")
+    /**
+     * 创建时间
+     */
+    @Column(name = "created_time", nullable = false, updatable = false)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime createTime;
+    private LocalDateTime createdTime;
 
-    @Column(name = "update_time")
+    /**
+     * 更新时间
+     */
+    @Column(name = "updated_time")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime updateTime;
+    private LocalDateTime updatedTime;
 
+    /**
+     * 是否删除：0-未删除，1-已删除
+     */
     @Column(name = "deleted")
-    private Boolean deleted;
+    private Boolean deleted = false;
 
-    // 构造函数
-    public User() {
-        this.createTime = LocalDateTime.now();
-        this.updateTime = LocalDateTime.now();
-        this.deleted = false;
-        this.status = 0;
-        this.gender = 0;
-        this.role = "USER";
-    }
-
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getOpenId() {
-        return openId;
-    }
-
-    public void setOpenId(String openId) {
-        this.openId = openId;
-    }
-
-    public String getUnionId() {
-        return unionId;
-    }
-
-    public void setUnionId(String unionId) {
-        this.unionId = unionId;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getNickname() {
-        return nickname;
-    }
-
-    public void setNickname(String nickname) {
-        this.nickname = nickname;
-    }
-
-    public String getAvatarUrl() {
-        return avatarUrl;
-    }
-
-    public void setAvatarUrl(String avatarUrl) {
-        this.avatarUrl = avatarUrl;
-    }
-
-    public Integer getGender() {
-        return gender;
-    }
-
-    public void setGender(Integer gender) {
-        this.gender = gender;
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
-
-    public Integer getStatus() {
-        return status;
-    }
-
-    public void setStatus(Integer status) {
-        this.status = status;
-    }
-
-    public LocalDateTime getCreateTime() {
-        return createTime;
-    }
-
-    public void setCreateTime(LocalDateTime createTime) {
-        this.createTime = createTime;
-    }
-
-    public LocalDateTime getUpdateTime() {
-        return updateTime;
-    }
-
-    public void setUpdateTime(LocalDateTime updateTime) {
-        this.updateTime = updateTime;
-    }
-
-    public Boolean getDeleted() {
-        return deleted;
-    }
-
-    public void setDeleted(Boolean deleted) {
-        this.deleted = deleted;
+    /**
+     * JPA生命周期回调
+     */
+    @PrePersist
+    protected void onCreate() {
+        this.createdTime = LocalDateTime.now();
+        this.updatedTime = LocalDateTime.now();
+        if (this.status == null) {
+            this.status = 1;
+        }
+        if (this.gender == null) {
+            this.gender = 0;
+        }
+        if (this.role == null) {
+            this.role = "USER";
+        }
+        if (this.deleted == null) {
+            this.deleted = false;
+        }
     }
 
     @PreUpdate
-    public void preUpdate() {
-        this.updateTime = LocalDateTime.now();
+    protected void onUpdate() {
+        this.updatedTime = LocalDateTime.now();
     }
 
-    // 便利方法
+    /**
+     * 用户状态枚举
+     */
+    public enum Status {
+        DISABLED(0, "禁用"),
+        NORMAL(1, "正常");
+
+        private final Integer code;
+        private final String description;
+
+        Status(Integer code, String description) {
+            this.code = code;
+            this.description = description;
+        }
+
+        public Integer getCode() {
+            return code;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+    }
+
+    /**
+     * 性别枚举
+     */
+    public enum Gender {
+        UNKNOWN(0, "未知"),
+        MALE(1, "男"),
+        FEMALE(2, "女");
+
+        private final Integer code;
+        private final String description;
+
+        Gender(Integer code, String description) {
+            this.code = code;
+            this.description = description;
+        }
+
+        public Integer getCode() {
+            return code;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+    }
+
+    /**
+     * 用户角色枚举
+     */
+    public enum Role {
+        USER("USER", "普通用户"),
+        ADMIN("ADMIN", "管理员");
+
+        private final String code;
+        private final String description;
+
+        Role(String code, String description) {
+            this.code = code;
+            this.description = description;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+    }
+
+    /**
+     * 判断是否为管理员
+     */
     public boolean isAdmin() {
-        return "ADMIN".equals(this.role) || "SUPER_ADMIN".equals(this.role);
+        return Role.ADMIN.getCode().equals(this.role);
     }
 
-    public boolean isSuperAdmin() {
-        return "SUPER_ADMIN".equals(this.role);
+    /**
+     * 判断用户是否正常状态
+     */
+    public boolean isNormal() {
+        return Status.NORMAL.getCode().equals(this.status) && !this.deleted;
     }
 
-    public boolean isActive() {
-        return this.status == 0 && !this.deleted;
+    /**
+     * 判断用户是否被禁用
+     */
+    public boolean isDisabled() {
+        return Status.DISABLED.getCode().equals(this.status);
+    }
+
+    /**
+     * 获取性别描述
+     */
+    public String getGenderDescription() {
+        for (Gender g : Gender.values()) {
+            if (g.getCode().equals(this.gender)) {
+                return g.getDescription();
+            }
+        }
+        return "未知";
+    }
+
+    /**
+     * 获取状态描述
+     */
+    public String getStatusDescription() {
+        for (Status s : Status.values()) {
+            if (s.getCode().equals(this.status)) {
+                return s.getDescription();
+            }
+        }
+        return "未知";
     }
 }

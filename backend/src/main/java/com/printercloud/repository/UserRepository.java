@@ -8,22 +8,16 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
- * 用户数据访问层
+ * 用户数据访问接口
  * 
- * @author PrinterCloud
- * @since 2024-01-01
+ * @author PrinterCloud Team
+ * @since 2024-12-07
  */
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
-
-    /**
-     * 根据用户名查找用户
-     */
-    Optional<User> findByUsername(String username);
 
     /**
      * 根据OpenID查找用户
@@ -41,25 +35,36 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByPhone(String phone);
 
     /**
-     * 查找所有管理员用户
+     * 根据用户名查找用户
      */
-    @Query("SELECT u FROM User u WHERE u.role IN ('ADMIN', 'SUPER_ADMIN') AND u.deleted = false")
-    List<User> findAllAdmins();
+    Optional<User> findByUsername(String username);
+
+    /**
+     * 查找正常状态的用户
+     */
+    @Query("SELECT u FROM User u WHERE u.status = 1 AND u.deleted = false")
+    Page<User> findActiveUsers(Pageable pageable);
 
     /**
      * 根据角色查找用户
      */
-    List<User> findByRoleAndDeletedFalse(String role);
+    Page<User> findByRole(String role, Pageable pageable);
 
     /**
      * 根据状态查找用户
      */
-    List<User> findByStatusAndDeletedFalse(Integer status);
+    Page<User> findByStatus(Integer status, Pageable pageable);
 
     /**
-     * 检查用户名是否存在
+     * 统计正常用户数量
      */
-    boolean existsByUsername(String username);
+    @Query("SELECT COUNT(u) FROM User u WHERE u.status = 1 AND u.deleted = false")
+    long countActiveUsers();
+
+    /**
+     * 统计管理员数量
+     */
+    long countByRole(String role);
 
     /**
      * 检查OpenID是否存在
@@ -67,45 +72,24 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByOpenId(String openId);
 
     /**
-     * 统计用户数量
+     * 检查手机号是否存在
      */
-    @Query("SELECT COUNT(u) FROM User u WHERE u.deleted = false")
-    long countActiveUsers();
+    boolean existsByPhone(String phone);
 
     /**
-     * 根据角色统计用户数量
+     * 检查用户名是否存在
      */
-    @Query("SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.deleted = false")
-    long countByRole(@Param("role") String role);
+    boolean existsByUsername(String username);
 
     /**
-     * 获取所有未删除的用户（分页）
+     * 根据昵称模糊查询
      */
-    Page<User> findByDeletedFalse(Pageable pageable);
+    @Query("SELECT u FROM User u WHERE u.nickname LIKE %:nickname% AND u.deleted = false")
+    Page<User> findByNicknameLike(@Param("nickname") String nickname, Pageable pageable);
 
     /**
-     * 根据角色和状态查找用户（分页）
+     * 查找最近注册的用户
      */
-    @Query("SELECT u FROM User u WHERE " +
-           "(:role IS NULL OR u.role = :role) AND " +
-           "(:status IS NULL OR u.status = :status) AND " +
-           "u.deleted = false")
-    Page<User> findByRoleAndStatus(@Param("role") String role,
-                                   @Param("status") Integer status,
-                                   Pageable pageable);
-
-    /**
-     * 根据搜索条件查找用户（分页）
-     */
-    @Query("SELECT u FROM User u WHERE " +
-           "(LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "LOWER(u.nickname) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "u.phone LIKE CONCAT('%', :search, '%')) AND " +
-           "(:role IS NULL OR u.role = :role) AND " +
-           "(:status IS NULL OR u.status = :status) AND " +
-           "u.deleted = false")
-    Page<User> findBySearchCriteria(@Param("search") String search,
-                                    @Param("role") String role,
-                                    @Param("status") Integer status,
-                                    Pageable pageable);
+    @Query("SELECT u FROM User u WHERE u.deleted = false ORDER BY u.createdTime DESC")
+    Page<User> findRecentUsers(Pageable pageable);
 }

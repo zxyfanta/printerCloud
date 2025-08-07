@@ -1,87 +1,90 @@
 server:
-  port: 8082
-  # 连接超时配置
-  connection-timeout: 60000
-  # Tomcat配置
-  tomcat:
-    connection-timeout: 60000
-    max-connections: 8192
-    threads:
-      max: 200
-      min-spare: 10
+  port: 8080
+  servlet:
+    context-path: /
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 
 spring:
   application:
-    name: printer-cloud-backend
+    name: printercloud-backend
+  
+  profiles:
+    active: dev
 
-  # H2 数据库配置
+  # H2数据库配置（开发环境）
   datasource:
-    url: jdbc:h2:mem:printer_cloud
+    url: jdbc:h2:mem:printercloud
     driver-class-name: org.h2.Driver
     username: sa
     password:
-
-  # H2 控制台配置
+    
   h2:
     console:
       enabled: true
       path: /h2-console
+      settings:
+        web-allow-others: true
 
-  # JPA 配置
+  # JPA配置
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: create-drop
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     show-sql: true
     properties:
       hibernate:
         format_sql: true
-        
-  # Spring Servlet Multipart配置
-  servlet:
-    multipart:
-      max-file-size: 50MB
-      max-request-size: 50MB
+        use_sql_comments: true
 
-# JWT配置
-jwt:
-  secret: printerCloudSuperSecretKey2024_abcdefghijklmnopqrstuvwxyz123456
-  expiration: 86400000  # 24小时
-
-# 管理员配置
-admin:
-  default:
-    username: admin
-    password: admin123
-    super-username: superadmin
-    super-password: super123
-
-# 文件上传配置
-file:
-  upload:
-    path: ./uploads/
-    max-size: 50MB
-
-# 微信小程序配置
-wechat:
-  miniprogram:
-    appid: ${WECHAT_APPID:wx1069c844e33050f1}  # 从环境变量获取，默认值为占位符
-    secret: ${WECHAT_SECRET:cbae778f80ba7f3196e0d589cb651f1f}  # 从环境变量获取，默认值为占位符
-    code2session-url: https://api.weixin.qq.com/sns/jscode2session
-  # 微信支付配置
-  pay:
-    mch-id: ${WECHAT_MCH_ID:1900000109}  # 商户号，从环境变量获取，默认为沙盒测试商户号
-    mch-key: ${WECHAT_MCH_KEY:146b96b07ae731a5af9c6d24a0b320e4}  # 商户密钥，从环境变量获取，默认为测试值
-    notify-url: ${WECHAT_NOTIFY_URL:https://example.com/api/pay/notify}  # 支付结果通知地址
-    sandbox-enabled: true  # 启用沙盒环境
-    sandbox-mch-key: ${WECHAT_SANDBOX_MCH_KEY:146b96b07ae731a5af9c6d24a0b320e4}  # 沙盒环境商户密钥
-
+  # Jackson配置
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
 
 # 日志配置
 logging:
   level:
-    com.printercloud: debug
-    org.springframework: info
-    org.hibernate.SQL: debug
+    root: INFO
+    com.printercloud: DEBUG
+    org.springframework: INFO
+    org.hibernate.SQL: DEBUG
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n"
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# 管理端点配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Swagger配置
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+  info:
+    title: 云打印系统API
+    description: 微信小程序云打印系统后端API接口文档
+    version: 1.0.0
+    contact:
+      name: PrinterCloud Team
+      email: support@printercloud.com

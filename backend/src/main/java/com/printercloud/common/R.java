@@ -1,225 +1,157 @@
 package com.printercloud.common;
 
-import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+
+import java.time.LocalDateTime;
 
 /**
- * 统一API响应结果封装
+ * 统一响应格式
  * 
- * @author PrinterCloud
- * @since 2024-01-01
- * @param <T> 数据类型
+ * @author PrinterCloud Team
+ * @since 2024-12-07
  */
-public class R<T> implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+@Data
+@Schema(description = "统一响应格式")
+public class R<T> {
 
     /**
-     * 状态码
+     * 响应码
      */
+    @Schema(description = "响应码", example = "200")
     private Integer code;
 
     /**
-     * 是否成功
+     * 响应消息
      */
-    private Boolean success;
-
-    /**
-     * 返回消息
-     */
+    @Schema(description = "响应消息", example = "操作成功")
     private String message;
 
     /**
-     * 返回数据
+     * 响应数据
      */
+    @Schema(description = "响应数据")
     private T data;
 
-    private R() {
-    }
-
     /**
-     * 成功返回结果
+     * 时间戳
      */
-    public static <T> R<T> ok() {
-        return ok(null);
+    @Schema(description = "时间戳", example = "2024-12-07 14:30:00")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime timestamp;
+
+    public R() {
+        this.timestamp = LocalDateTime.now();
+    }
+
+    public R(Integer code, String message) {
+        this();
+        this.code = code;
+        this.message = message;
+    }
+
+    public R(Integer code, String message, T data) {
+        this(code, message);
+        this.data = data;
     }
 
     /**
-     * 成功返回结果
-     *
-     * @param data 返回数据
+     * 成功响应
      */
-    public static <T> R<T> ok(T data) {
-        return ok(data, "操作成功");
+    public static <T> R<T> success() {
+        return new R<>(200, "操作成功");
+    }
+
+    public static <T> R<T> success(String message) {
+        return new R<>(200, message);
+    }
+
+    public static <T> R<T> success(T data) {
+        return new R<>(200, "操作成功", data);
+    }
+
+    public static <T> R<T> success(String message, T data) {
+        return new R<>(200, message, data);
     }
 
     /**
-     * 成功返回结果
-     *
-     * @param data 返回数据
-     * @param message 返回消息
+     * 失败响应
      */
-    public static <T> R<T> ok(T data, String message) {
-        R<T> r = new R<>();
-        r.setCode(200);
-        r.setSuccess(true);
-        r.setMessage(message);
-        r.setData(data);
-        return r;
+    public static <T> R<T> error() {
+        return new R<>(500, "操作失败");
+    }
+
+    public static <T> R<T> error(String message) {
+        return new R<>(500, message);
+    }
+
+    public static <T> R<T> error(Integer code, String message) {
+        return new R<>(code, message);
     }
 
     /**
-     * 失败返回结果
-     */
-    public static <T> R<T> fail() {
-        return fail("操作失败");
-    }
-
-    /**
-     * 失败返回结果
-     *
-     * @param message 错误消息
-     */
-    public static <T> R<T> fail(String message) {
-        return fail(message, 500);
-    }
-
-    /**
-     * 失败返回结果
-     *
-     * @param message 错误消息
-     * @param code 错误码
-     */
-    public static <T> R<T> fail(String message, Integer code) {
-        R<T> r = new R<>();
-        r.setCode(code);
-        r.setSuccess(false);
-        r.setMessage(message);
-        return r;
-    }
-
-    /**
-     * 参数验证失败返回结果
+     * 参数验证失败
      */
     public static <T> R<T> validateFailed() {
-        return validateFailed("参数验证失败");
+        return new R<>(400, "参数验证失败");
     }
 
-    /**
-     * 参数验证失败返回结果
-     *
-     * @param message 提示信息
-     */
     public static <T> R<T> validateFailed(String message) {
-        R<T> r = new R<>();
-        r.setCode(400);
-        r.setSuccess(false);
-        r.setMessage(message);
-        return r;
+        return new R<>(400, message);
     }
 
     /**
-     * 未登录返回结果
+     * 请求错误
+     */
+    public static <T> R<T> badRequest(String message) {
+        return new R<>(400, message);
+    }
+
+    /**
+     * 未授权
      */
     public static <T> R<T> unauthorized() {
-        return unauthorized("暂未登录或token已经过期");
+        return new R<>(401, "未授权");
     }
 
-    /**
-     * 未登录返回结果
-     *
-     * @param message 提示信息
-     */
     public static <T> R<T> unauthorized(String message) {
-        R<T> r = new R<>();
-        r.setCode(401);
-        r.setSuccess(false);
-        r.setMessage(message);
-        return r;
+        return new R<>(401, message);
     }
 
     /**
-     * 未授权返回结果
+     * 禁止访问
      */
     public static <T> R<T> forbidden() {
-        return forbidden("没有相关权限");
+        return new R<>(403, "禁止访问");
     }
 
-    /**
-     * 未授权返回结果
-     *
-     * @param message 提示信息
-     */
     public static <T> R<T> forbidden(String message) {
-        R<T> r = new R<>();
-        r.setCode(403);
-        r.setSuccess(false);
-        r.setMessage(message);
-        return r;
+        return new R<>(403, message);
     }
 
     /**
-     * 资源不存在返回结果
+     * 资源不存在
      */
     public static <T> R<T> notFound() {
-        return notFound("资源不存在");
+        return new R<>(404, "资源不存在");
     }
 
-    /**
-     * 资源不存在返回结果
-     *
-     * @param message 提示信息
-     */
     public static <T> R<T> notFound(String message) {
-        R<T> r = new R<>();
-        r.setCode(404);
-        r.setSuccess(false);
-        r.setMessage(message);
-        return r;
+        return new R<>(404, message);
     }
 
     /**
      * 判断是否成功
      */
     public boolean isSuccess() {
-        return Boolean.TRUE.equals(this.success);
+        return this.code != null && this.code == 200;
     }
 
     /**
      * 判断是否失败
      */
-    public boolean isFail() {
+    public boolean isError() {
         return !isSuccess();
-    }
-
-    public Integer getCode() {
-        return code;
-    }
-
-    public void setCode(Integer code) {
-        this.code = code;
-    }
-
-    public Boolean getSuccess() {
-        return success;
-    }
-
-    public void setSuccess(Boolean success) {
-        this.success = success;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public T getData() {
-        return data;
-    }
-
-    public void setData(T data) {
-        this.data = data;
     }
 }
