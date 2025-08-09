@@ -4,6 +4,31 @@ version: '3.8'
 # 包含Backend API、Vue管理系统、数据库、缓存、对象存储等所有服务
 
 services:
+  # OnlyOffice Document Server（文档转换服务）
+  documentserver:
+    image: onlyoffice/documentserver:latest
+    container_name: documentserver
+    restart: unless-stopped
+    environment:
+      # 仅用于转换，不启用其内置JWT
+      JWT_ENABLED: "false"
+      TZ: Asia/Shanghai
+    ports:
+      # 对外暴露用于排查，可按需限制到内网
+      - "8888:80"
+    volumes:
+      # 挂载中文/常用字体（请将字体文件放入 ./fonts 目录）
+      - ./fonts:/usr/share/fonts/truetype/custom:ro
+    command: /bin/bash -lc "documentserver-generate-allfonts.sh && /app/ds/run-document-server.sh"
+    healthcheck:
+      test: ["CMD", "bash", "-lc", "curl -fsS http://localhost/healthcheck | grep -qi true"]
+      interval: 30s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    networks:
+      - printercloud-network
+
   # MySQL数据库
   mysql:
     image: mysql:8.0
@@ -94,6 +119,9 @@ services:
       MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-printercloud}
       # JWT配置
       JWT_SECRET: ${JWT_SECRET:-printercloud-jwt-secret-key-2024}
+      JWT_EXPIRES: ${JWT_EXPIRES:-86400}
+      # OnlyOffice
+      ONLYOFFICE_URL: http://documentserver:80
       # 微信配置
       WECHAT_APP_ID: ${WECHAT_APP_ID:-your-wechat-app-id}
       WECHAT_APP_SECRET: ${WECHAT_APP_SECRET:-your-wechat-app-secret}

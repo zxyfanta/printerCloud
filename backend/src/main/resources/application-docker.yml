@@ -1,0 +1,36 @@
+server:
+  port: 8080
+
+spring:
+  jackson:
+    default-property-inclusion: non_null
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:printercloud}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD:root}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+
+logging:
+  file:
+    name: /app/logs/spring.log
+  level:
+    root: INFO
+
+jwt:
+  secret: ${JWT_SECRET}
+  expires: ${JWT_EXPIRES:86400}
+
+onlyoffice:
+  url: ${ONLYOFFICE_URL:http://documentserver:80}
+

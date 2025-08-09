@@ -17,16 +17,11 @@ import java.time.LocalDateTime;
 public class LoginResponse {
 
     /**
-     * 访问令牌
+     * 登录令牌（JWT）
      */
-    @Schema(description = "访问令牌", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
-    private String accessToken;
+    @Schema(description = "登录令牌", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
+    private String token;
 
-    /**
-     * 令牌类型
-     */
-    @Schema(description = "令牌类型", example = "Bearer")
-    private String tokenType = "Bearer";
 
     /**
      * 过期时间（秒）

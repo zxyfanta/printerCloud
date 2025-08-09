@@ -1,0 +1,32 @@
+package com.printercloud.controller;
+
+import com.printercloud.common.R;
+import com.printercloud.service.VerificationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/verify")
+@Tag(name = "验证码", description = "取件验证码相关接口")
+@RequiredArgsConstructor
+public class VerificationController {
+
+    private final VerificationService verificationService;
+
+    private Long mockUserId() { return 1L; }
+
+    @PostMapping("/generate")
+    @Operation(summary = "生成取件码")
+    public R<String> generate(@RequestParam("orderId") Long orderId, @RequestAttribute("uid") Long uid) {
+        return R.success("生成成功", verificationService.generatePickupCode(orderId, uid));
+    }
+
+    @PostMapping("/validate")
+    @Operation(summary = "校验取件码")
+    public R<Boolean> validate(@RequestParam("code") String code) {
+        boolean ok = verificationService.verifyPickupCode(code, mockUserId());
+        return ok ? R.success(true) : R.error("验证码无效或已过期");
+    }
+}

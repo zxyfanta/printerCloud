@@ -50,8 +50,8 @@ public class CreateOrderRequest {
     @Data
     @Schema(description = "文件信息")
     public static class FileInfoDto {
-        @Schema(description = "文件ID", example = "1")
-        private Long fileId;
+        @Schema(description = "服务器文件ID", example = "1")
+        private Long serverId;
 
         @Schema(description = "文件名", example = "document.pdf")
         private String fileName;

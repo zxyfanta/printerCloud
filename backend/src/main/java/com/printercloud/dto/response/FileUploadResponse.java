@@ -17,10 +17,10 @@ import java.time.LocalDateTime;
 public class FileUploadResponse {
 
     /**
-     * 文件ID
+     * 文件ID（小程序使用）
      */
     @Schema(description = "文件ID", example = "1")
-    private Long fileId;
+    private Long id;
 
     /**
      * 原始文件名

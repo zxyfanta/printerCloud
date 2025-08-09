@@ -1,5 +1,12 @@
 server:
-  port: 8080
+  port: 8082
+
+jwt:
+  secret: printercloud-secret
+  expires: 86400
+
+onlyoffice:
+  url: http://onlyoffice:80
   servlet:
     context-path: /
     encoding:
